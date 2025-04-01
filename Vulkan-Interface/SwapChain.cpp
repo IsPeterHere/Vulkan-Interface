@@ -18,7 +18,7 @@ SwapChain::~SwapChain()
 
 void SwapChain::initSwapChain(VkSurfaceKHR surface, GLFWwindow*  window)
 {
-    SwapChainSupportDetails swapChainSupport = device->querySwapChainSupport(surface);
+    SwapChainSupportDetails swapChainSupport = device->querySwapChainSupport();
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -39,7 +39,7 @@ void SwapChain::initSwapChain(VkSurfaceKHR surface, GLFWwindow*  window)
     createInfo.imageExtent = extent;
     createInfo.imageArrayLayers = 1;//always 1 unless doing stereoscopic 3D 
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    QueueFamilyIndices indices = device->findQueueFamilies(surface);
+    QueueFamilyIndices indices = device->findQueueFamilies();
     uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
     if (indices.graphicsFamily != indices.presentFamily)

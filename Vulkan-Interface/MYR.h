@@ -72,21 +72,23 @@ private:
 class Device
 {
 public:
-    Device() {};
+    Device();
     ~Device();
     
-
-    void pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface);
-    void initLogicalDevice(bool enableValidationLayers, VkSurfaceKHR surface);
-    SwapChainSupportDetails querySwapChainSupport(VkSurfaceKHR surface);
-    QueueFamilyIndices findQueueFamilies(VkSurfaceKHR surface);
-    bool isDeviceSuitable(VkSurfaceKHR surface);
+    void setSurface(VkSurfaceKHR surface) { this->surface = surface; }
+    void pickPhysicalDevice(VkInstance instance);
+    void initLogicalDevice(bool enableValidationLayers);
+    SwapChainSupportDetails querySwapChainSupport();
+    QueueFamilyIndices findQueueFamilies();
+    bool isDeviceSuitable();
 
     VkDevice getHandle() const { return device; }
     VkPhysicalDevice getPhysicalDevice() { return physicalDevice; }
     VkQueue getGraphicsQueue() { return graphicsQueue; }
     VkQueue getPresentQueue() { return presentQueue; }
 private:
+    VkSurfaceKHR surface;
+
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
 
@@ -140,4 +142,23 @@ private:
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
     std::vector<VkFramebuffer> Framebuffers;
+};
+
+class Command
+{
+public:
+    Command(Device* device, Pipeline* pipeline);
+    ~Command();
+    
+    void initCommandPool();
+    void initCommandBuffer();
+    void recordCommandBuffer(uint32_t imageIndex, VkExtent2D extent);
+
+    VkCommandBuffer_T** ofBuffer() { return &commandBuffer; }
+
+private:
+    Device* device;
+    Pipeline* pipeline;
+    VkCommandPool commandPool;
+    VkCommandBuffer commandBuffer;
 };

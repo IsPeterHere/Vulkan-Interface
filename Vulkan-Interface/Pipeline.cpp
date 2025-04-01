@@ -4,7 +4,7 @@
 #include <fstream>
 
 static std::vector<char> readFile(const std::string& filename);
-VkShaderModule createShaderModule(const std::vector<char>& code);
+VkShaderModule createShaderModule(const std::vector<char>& code, Device* device);
 
 Pipeline::Pipeline(Device* device) : device(device)
 {

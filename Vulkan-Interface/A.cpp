@@ -4,16 +4,7 @@
 #include "MYR.h"
 #include <iostream>
 #include <stdexcept>
-#include <cstdlib>
-#include <vector>
-#include <optional>
-#include <set>
-#include <cstdint> 
-#include <limits> 
-#include <algorithm>
-#include <fstream>
 
-//List of required extensions
 
 
 const bool enableValidationLayers{true};
@@ -29,9 +20,10 @@ public:
     HelloTriangleApplication() : 
         window(new Window(WIDTH,HEIGHT)),
         core(new Core(enableValidationLayers)), 
-        device(new Device()), 
+        device(new Device()),
         swapChain(new SwapChain(device)),
-        pipeline(new Pipeline(device))
+        pipeline(new Pipeline(device)),
+        command(new Command(device,pipeline))
     {
     }
 
@@ -51,9 +43,9 @@ private:
     Device* device;
     SwapChain* swapChain;
     Pipeline* pipeline;
+    Command* command;
 
-    VkCommandPool commandPool;
-    VkCommandBuffer commandBuffer;
+    
 
     VkSemaphore imageAvailableSemaphore;
     VkSemaphore renderFinishedSemaphore;
@@ -74,8 +66,7 @@ private:
         vkDestroySemaphore(device->getHandle(), imageAvailableSemaphore, nullptr);
         vkDestroyFence(device->getHandle(), inFlightFence, nullptr);
 
-        vkDestroyCommandPool(device->getHandle(), commandPool, nullptr);
-
+        delete command;
         delete pipeline;
         delete swapChain;
         delete device;
@@ -89,8 +80,9 @@ private:
         core->initDebugMessenger();
         core->initSurface(window);
 
-        device->pickPhysicalDevice(core->getInstance(), core->getSurface());
-        device->initLogicalDevice(enableValidationLayers, core->getSurface());
+        device->setSurface(core->getSurface());
+        device->pickPhysicalDevice(core->getInstance());
+        device->initLogicalDevice(enableValidationLayers);
 
         swapChain->initSwapChain(core->getSurface(),window->getHandle());
         swapChain->initImageViews();
@@ -99,87 +91,12 @@ private:
         pipeline->initGraphicsPipeline();
         pipeline->initFramebuffers(swapChain);
 
-        createCommandPool();
-        createCommandBuffer();
+        command->initCommandPool();
+        command->initCommandBuffer();
+
         createSyncObjects();
     }
 
-   
-    void createCommandPool() 
-    {
-        QueueFamilyIndices queueFamilyIndices = device->findQueueFamilies(core->getSurface());
-
-        VkCommandPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-        if (vkCreateCommandPool(device->getHandle(), &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create command pool!");
-        }
-    }
-    void createCommandBuffer() 
-    {
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = commandPool;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = 1;
-
-        if (vkAllocateCommandBuffers(device->getHandle(), &allocInfo, &commandBuffer) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to allocate command buffers!");
-        }
-    }
-    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) 
-    {
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = 0; // Optional
-        beginInfo.pInheritanceInfo = nullptr; // Optional
-
-        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) 
-        {
-            throw std::runtime_error("failed to begin recording command buffer!");
-        }
-
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = pipeline->getRenderPass();
-        renderPassInfo.framebuffer = pipeline->getFramebuffer(imageIndex);
-        renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = swapChain->getExtent();
-        VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
-
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getHandle());
-
-            VkViewport viewport{};
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = static_cast<float>(swapChain->getExtent().width);
-            viewport.height = static_cast<float>(swapChain->getExtent().height);
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-            vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-            VkRect2D scissor{};
-            scissor.offset = { 0, 0 };
-            scissor.extent = swapChain->getExtent();
-            vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-            vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-
-        vkCmdEndRenderPass(commandBuffer);
-        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) 
-        {
-            throw std::runtime_error("failed to record command buffer!");
-        }
-    }
 
     void createSyncObjects() 
     {
@@ -205,8 +122,8 @@ private:
         uint32_t imageIndex;
         vkAcquireNextImageKHR(device->getHandle(), swapChain->getHandle(), UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
-        vkResetCommandBuffer(commandBuffer, 0);
-        recordCommandBuffer(commandBuffer, imageIndex);
+        vkResetCommandBuffer(*(command->ofBuffer()), 0);
+        command->recordCommandBuffer(imageIndex,swapChain->getExtent());
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -216,7 +133,7 @@ private:
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
+        submitInfo.pCommandBuffers = command->ofBuffer();
         VkSemaphore signalSemaphores[] = { renderFinishedSemaphore };
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;

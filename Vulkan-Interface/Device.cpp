@@ -24,7 +24,7 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice device)
 
 
 
-
+Device::Device() {}
 Device::~Device()
 {
     vkDestroyDevice(device, nullptr);
@@ -32,9 +32,9 @@ Device::~Device()
 
 
 //Logical Device set-up
-void Device::initLogicalDevice(bool enableValidationLayers, VkSurfaceKHR surface)
+void Device::initLogicalDevice(bool enableValidationLayers)
 {
-    QueueFamilyIndices indices = findQueueFamilies(surface);
+    QueueFamilyIndices indices = findQueueFamilies();
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -79,7 +79,7 @@ void Device::initLogicalDevice(bool enableValidationLayers, VkSurfaceKHR surface
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
-void Device::pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
+void Device::pickPhysicalDevice(VkInstance instance)
 {
     uint32_t deviceCount{ 0 };
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -91,7 +91,7 @@ void Device::pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
 
     for (const auto& device : devices) {
         physicalDevice = device;
-        if (isDeviceSuitable(surface)) break;
+        if (isDeviceSuitable()) break;
         physicalDevice = VK_NULL_HANDLE;
     }
 
@@ -100,7 +100,7 @@ void Device::pickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
     }
 }
 
-QueueFamilyIndices Device::findQueueFamilies(VkSurfaceKHR surface)
+QueueFamilyIndices Device::findQueueFamilies()
 {
     QueueFamilyIndices indices;
 
@@ -140,7 +140,7 @@ QueueFamilyIndices Device::findQueueFamilies(VkSurfaceKHR surface)
 
 }
 
-SwapChainSupportDetails Device::querySwapChainSupport(VkSurfaceKHR surface) {
+SwapChainSupportDetails Device::querySwapChainSupport() {
     SwapChainSupportDetails details;
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.capabilities);
@@ -163,9 +163,9 @@ SwapChainSupportDetails Device::querySwapChainSupport(VkSurfaceKHR surface) {
     return details;
 }
 
-bool Device::isDeviceSuitable(VkSurfaceKHR surface) //Check for separate GPU supporting of geometry shaders
+bool Device::isDeviceSuitable() //Check for separate GPU supporting of geometry shaders
 {
-    QueueFamilyIndices indices = findQueueFamilies(surface);
+    QueueFamilyIndices indices = findQueueFamilies();
     if (!indices.allComplete()) return false;
 
     VkPhysicalDeviceProperties deviceProperties;
@@ -178,7 +178,7 @@ bool Device::isDeviceSuitable(VkSurfaceKHR surface) //Check for separate GPU sup
     bool swapChainAdequate = false;
     if (extensionsSupported)
     {
-        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(surface);
+        SwapChainSupportDetails swapChainSupport = querySwapChainSupport();
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
 
