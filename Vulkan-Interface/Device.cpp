@@ -136,6 +136,8 @@ QueueFamilyIndices Device::findQueueFamilies(VkSurfaceKHR surface)
         }
     }
 
+    throw std::runtime_error("failed to findQueueFamilies!");
+
 }
 
 SwapChainSupportDetails Device::querySwapChainSupport(VkSurfaceKHR surface) {
