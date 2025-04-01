@@ -107,7 +107,7 @@ public:
     VkSwapchainKHR getHandle() { return swapChain; }
     VkFormat getImageFormat() { return swapChainImageFormat; };
     uint32_t getImageCount() { return imageCount; }
-    VkImageView getView(int index) { return swapChainImageViews[index]; }
+    VkImageView getView(size_t index) { return swapChainImageViews[index]; }
     VkExtent2D getExtent() { return swapChainExtent; }
 
 
@@ -119,4 +119,25 @@ private:
     std::vector<VkImageView> swapChainImageViews;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
+};
+
+class Pipeline
+{
+public:
+    Pipeline(Device* device);
+    ~Pipeline();
+
+    void initRenderPass(VkFormat ImageFormat);
+    void initGraphicsPipeline();
+    void initFramebuffers(SwapChain* swapChain);
+
+    VkPipeline getHandle() { return graphicsPipeline; }
+    VkRenderPass getRenderPass() { return renderPass; }
+    VkFramebuffer getFramebuffer(uint32_t imageIndex) { return Framebuffers[imageIndex]; }
+private:
+    Device* device;
+    VkRenderPass renderPass;
+    VkPipelineLayout pipelineLayout;
+    VkPipeline graphicsPipeline;
+    std::vector<VkFramebuffer> Framebuffers;
 };

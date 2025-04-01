@@ -138,6 +138,7 @@
   <ItemGroup>
     <ClCompile Include="A.cpp" />
     <ClCompile Include="Device.cpp" />
+    <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="SwapChain.cpp" />
     <ClCompile Include="VulkanInstance.cpp" />
     <ClCompile Include="Window.cpp" />
