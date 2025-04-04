@@ -12,10 +12,6 @@ Pipeline::Pipeline(Device* device) : device(device)
 
 Pipeline::~Pipeline()
 {
-    for (auto framebuffer : Framebuffers) {
-        vkDestroyFramebuffer(device->getHandle(), framebuffer, nullptr);
-    }
-
     vkDestroyPipeline(device->getHandle(), graphicsPipeline, nullptr);
     vkDestroyPipelineLayout(device->getHandle(), pipelineLayout, nullptr);
     vkDestroyRenderPass(device->getHandle(), renderPass, nullptr);
@@ -199,30 +195,6 @@ void Pipeline::initGraphicsPipeline()
 
     vkDestroyShaderModule(device->getHandle(), fragShaderModule, nullptr);
     vkDestroyShaderModule(device->getHandle(), vertShaderModule, nullptr);
-}
-
-void Pipeline::initFramebuffers(SwapChain* swapChain)
-{
-    Framebuffers.resize(swapChain->getImageCount());
-
-    for (size_t i = 0; i < swapChain->getImageCount(); i++)
-    {
-        VkImageView attachments[] = { swapChain->getView(i) };
-
-        VkFramebufferCreateInfo framebufferInfo{};
-        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = renderPass;
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = attachments;
-        framebufferInfo.width = swapChain->getExtent().width;
-        framebufferInfo.height = swapChain->getExtent().height;
-        framebufferInfo.layers = 1;
-
-        if (vkCreateFramebuffer(device->getHandle(), &framebufferInfo, nullptr, &Framebuffers[i]) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create framebuffer!");
-        }
-    }
 }
 
 

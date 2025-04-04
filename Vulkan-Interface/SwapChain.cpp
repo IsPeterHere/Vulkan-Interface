@@ -9,6 +9,10 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwi
 SwapChain::SwapChain(Device* device) : device(device) {}
 SwapChain::~SwapChain()
 {
+    for (auto framebuffer : Framebuffers) {
+        vkDestroyFramebuffer(device->getHandle(), framebuffer, nullptr);
+    }
+
     for (auto imageView : swapChainImageViews) {
         vkDestroyImageView(device->getHandle(), imageView, nullptr);
     }
@@ -96,7 +100,29 @@ void SwapChain::initImageViews() {
     }
 }
 
+void SwapChain::initFramebuffers(VkRenderPass renderPass)
+{
+    Framebuffers.resize(imageCount);
 
+    for (size_t i = 0; i < imageCount; i++)
+    {
+        VkImageView attachments[] = { swapChainImageViews[i] };
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = renderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.width = swapChainExtent.width;
+        framebufferInfo.height = swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device->getHandle(), &framebufferInfo, nullptr, &Framebuffers[i]) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create framebuffer!");
+        }
+    }
+}
 
 
 
