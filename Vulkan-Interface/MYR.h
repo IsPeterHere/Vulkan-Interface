@@ -36,6 +36,8 @@ struct SwapChainSupportDetails
 class Window
 {
 public:
+    bool windowResized = false;
+
     Window(uint32_t width, uint32_t height);
     ~Window();
 
@@ -76,8 +78,8 @@ public:
     ~Device();
     
     void setSurface(VkSurfaceKHR surface) { this->surface = surface; }
-    void pickPhysicalDevice(VkInstance instance);
-    void initLogicalDevice(bool enableValidationLayers);
+    void pickPhysicalDevice(VkInstance);
+    void initLogicalDevice(bool);
     SwapChainSupportDetails querySwapChainSupport();
     QueueFamilyIndices findQueueFamilies();
     bool isDeviceSuitable();
@@ -100,18 +102,20 @@ private:
 class SwapChain
 {
 public:
-    SwapChain(Device* device);
+    SwapChain(Device*);
     ~SwapChain();
 
-    void initSwapChain(VkSurfaceKHR surface, GLFWwindow* window);
+    void initSwapChain(VkSurfaceKHR, GLFWwindow*);
     void initImageViews();
+    void initFramebuffers(VkRenderPass renderPass);
+
 
     VkSwapchainKHR getHandle() { return swapChain; }
     VkFormat getImageFormat() { return swapChainImageFormat; };
     uint32_t getImageCount() { return imageCount; }
     VkImageView getView(size_t index) { return swapChainImageViews[index]; }
     VkExtent2D getExtent() { return swapChainExtent; }
-
+    VkFramebuffer getFramebuffer(uint32_t imageIndex) { return Framebuffers[imageIndex]; }
 
 private:
     Device* device;
@@ -119,6 +123,7 @@ private:
     uint32_t imageCount;
     std::vector<VkImage> swapChainImages;
     std::vector<VkImageView> swapChainImageViews;
+    std::vector<VkFramebuffer> Framebuffers;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
 };
@@ -126,39 +131,36 @@ private:
 class Pipeline
 {
 public:
-    Pipeline(Device* device);
+    Pipeline(Device*);
     ~Pipeline();
 
-    void initRenderPass(VkFormat ImageFormat);
+    void initRenderPass(VkFormat);
     void initGraphicsPipeline();
-    void initFramebuffers(SwapChain* swapChain);
 
     VkPipeline getHandle() { return graphicsPipeline; }
     VkRenderPass getRenderPass() { return renderPass; }
-    VkFramebuffer getFramebuffer(uint32_t imageIndex) { return Framebuffers[imageIndex]; }
 private:
     Device* device;
     VkRenderPass renderPass;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
-    std::vector<VkFramebuffer> Framebuffers;
 };
 
 class Command
 {
 public:
-    Command(Device* device, Pipeline* pipeline);
+    Command(Device*, Pipeline*);
     ~Command();
     
     void initCommandPool();
-    void initCommandBuffer();
-    void recordCommandBuffer(uint32_t imageIndex, VkExtent2D extent);
+    void initCommandBuffers(const int);
+    void recordCommandBuffer(uint32_t, uint32_t, SwapChain* swapChain);
 
-    VkCommandBuffer_T** ofBuffer() { return &commandBuffer; }
+    VkCommandBuffer_T** ofBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
 
 private:
     Device* device;
     Pipeline* pipeline;
     VkCommandPool commandPool;
-    VkCommandBuffer commandBuffer;
+    std::vector<VkCommandBuffer> commandBuffers;
 };
