@@ -1,14 +1,21 @@
 #include "MYR.h"
 #include <stdexcept>
 
-Command::Command(Device* device, Pipeline* pipeline) : device(device), pipeline(pipeline) {}
-Command::~Command() 
+
+uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice);
+
+
+
+Buffers::Buffers(Device* device, Pipeline* pipeline) : device(device), pipeline(pipeline) {}
+Buffers::~Buffers()
 {
+    vkDestroyBuffer(device->getHandle(), vertexBuffer, nullptr);
+    vkFreeMemory(device->getHandle(), vertexBufferMemory, nullptr);
 	vkDestroyCommandPool(device->getHandle(), commandPool, nullptr);
 }
 
 
-void Command::initCommandPool()
+void Buffers::initCommandPool()
 {
     QueueFamilyIndices queueFamilyIndices = device->findQueueFamilies();
 
@@ -22,7 +29,7 @@ void Command::initCommandPool()
         throw std::runtime_error("failed to create command pool!");
     }
 }
-void Command::initCommandBuffers(const int frames_in_flight)
+void Buffers::initCommandBuffers(const int frames_in_flight)
 {
     commandBuffers.resize(frames_in_flight);
 
@@ -36,7 +43,7 @@ void Command::initCommandBuffers(const int frames_in_flight)
         throw std::runtime_error("failed to allocate command buffers!");
     }
 }
-void Command::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageIndex, SwapChain* swapChain)
+void Buffers::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageIndex, SwapChain* swapChain)
 {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -62,6 +69,11 @@ void Command::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageInde
 
     vkCmdBindPipeline(commandBuffers[currentFrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getHandle());
 
+    VkBuffer vertexBuffers[] = { vertexBuffer };
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(commandBuffers[currentFrameIndex], 0, 1, vertexBuffers, offsets);
+
+
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -76,11 +88,56 @@ void Command::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageInde
     scissor.extent = swapChain->getExtent();
     vkCmdSetScissor(commandBuffers[currentFrameIndex], 0, 1, &scissor);
 
-    vkCmdDraw(commandBuffers[currentFrameIndex], 3, 1, 0, 0);
+    vkCmdDraw(commandBuffers[currentFrameIndex], vertex_count, 1, 0, 0);
 
     vkCmdEndRenderPass(commandBuffers[currentFrameIndex]);
     if (vkEndCommandBuffer(commandBuffers[currentFrameIndex]) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to record command buffer!");
     }
+}
+
+void Buffers::initVertexBuffer(const std::vector<Vertex> vertices)
+{
+    vertex_count = static_cast<uint32_t>(vertices.size());
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = sizeof(vertices[0]) * vertices.size();
+    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateBuffer(device->getHandle(), &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS)
+        throw std::runtime_error("failed to create vertex buffer!");
+    
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device->getHandle(), vertexBuffer, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,device->getPhysicalDevice());
+
+    if (vkAllocateMemory(device->getHandle(), &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS)
+        throw std::runtime_error("failed to allocate vertex buffer memory!");
+
+    vkBindBufferMemory(device->getHandle(), vertexBuffer, vertexBufferMemory, 0);
+
+    void* data;
+    vkMapMemory(device->getHandle(), vertexBufferMemory, 0, bufferInfo.size, 0, &data);
+    memcpy(data, vertices.data(), (size_t) bufferInfo.size);
+    vkUnmapMemory(device->getHandle(), vertexBufferMemory);
+}
+
+uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties,VkPhysicalDevice physicalDevice)
+{
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) 
+    {
+        if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            return i;
+    }
+
+    throw std::runtime_error("failed to find suitable memory type!");
 }

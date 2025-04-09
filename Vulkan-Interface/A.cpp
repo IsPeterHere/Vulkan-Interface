@@ -5,8 +5,6 @@
 #include <iostream>
 #include <stdexcept>
 
-
-
 const bool enableValidationLayers{true};
 
 
@@ -18,13 +16,20 @@ public:
     const uint32_t HEIGHT = 600;
     const int MAX_FRAMES_IN_FLIGHT = 2;
 
+    const std::vector<Vertex> vertices = 
+    {
+        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    };
+
     HelloTriangleApplication() : 
         window(new Window(WIDTH,HEIGHT)),
         core(new Core(enableValidationLayers)), 
         device(new Device()),
         swapChain(new SwapChain(device)),
         pipeline(new Pipeline(device)),
-        command(new Command(device,pipeline))
+        buffers(new Buffers(device,pipeline))
     {
     }
 
@@ -64,7 +69,7 @@ private:
     Device* device;
     SwapChain* swapChain;
     Pipeline* pipeline;
-    Command* command;
+    Buffers* buffers;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -91,7 +96,7 @@ private:
             vkDestroyFence(device->getHandle(), inFlightFences[i], nullptr);
         }
 
-        delete command;
+        delete buffers;
         delete pipeline;
         delete swapChain;
         delete device;
@@ -118,8 +123,10 @@ private:
 
         swapChain->initFramebuffers(pipeline->getRenderPass());
 
-        command->initCommandPool();
-        command->initCommandBuffers(MAX_FRAMES_IN_FLIGHT);
+        buffers->initCommandPool();
+        buffers->initVertexBuffer(vertices);
+        buffers->initCommandBuffers(MAX_FRAMES_IN_FLIGHT);
+        
 
         createSyncObjects();
     }
@@ -166,8 +173,8 @@ private:
 
         vkResetFences(device->getHandle(), 1, &inFlightFences[currentFrame]);
 
-        vkResetCommandBuffer(*(command->ofBuffer(currentFrame)), 0);
-        command->recordCommandBuffer(currentFrame,imageIndex,swapChain);
+        vkResetCommandBuffer(*(buffers->refCommandfBuffer(currentFrame)), 0);
+        buffers->recordCommandBuffer(currentFrame,imageIndex,swapChain);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -177,7 +184,7 @@ private:
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = command->ofBuffer(currentFrame);
+        submitInfo.pCommandBuffers = buffers->refCommandfBuffer(currentFrame);
         VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;

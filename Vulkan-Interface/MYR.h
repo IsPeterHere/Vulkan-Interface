@@ -3,6 +3,9 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <optional>
+#include <glm/glm.hpp>
+#include <array>
+
 
 const std::vector<const char*> validationLayers{ "VK_LAYER_KHRONOS_validation" };
 
@@ -13,7 +16,13 @@ const std::vector<const char*> deviceExtensions
 
 
 
+struct Vertex {
+    glm::vec2 pos;
+    glm::vec3 color;
 
+    static VkVertexInputBindingDescription getBindingDescription();
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
+};
 
 
 struct QueueFamilyIndices {
@@ -119,6 +128,7 @@ public:
 
 private:
     Device* device;
+
     VkSwapchainKHR swapChain;
     uint32_t imageCount;
     std::vector<VkImage> swapChainImages;
@@ -141,26 +151,32 @@ public:
     VkRenderPass getRenderPass() { return renderPass; }
 private:
     Device* device;
+
     VkRenderPass renderPass;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
 };
 
-class Command
+class Buffers
 {
 public:
-    Command(Device*, Pipeline*);
-    ~Command();
+    Buffers(Device*, Pipeline*);
+    ~Buffers();
     
     void initCommandPool();
     void initCommandBuffers(const int);
     void recordCommandBuffer(uint32_t, uint32_t, SwapChain* swapChain);
+    void initVertexBuffer(const std::vector<Vertex>);
 
-    VkCommandBuffer_T** ofBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
+    VkCommandBuffer_T** refCommandfBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
 
 private:
     Device* device;
     Pipeline* pipeline;
+
     VkCommandPool commandPool;
     std::vector<VkCommandBuffer> commandBuffers;
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
+    uint32_t vertex_count;
 };

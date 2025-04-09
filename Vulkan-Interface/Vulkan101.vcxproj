@@ -138,10 +138,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="A.cpp" />
-    <ClCompile Include="Command.cpp" />
+    <ClCompile Include="Buffers.cpp" />
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="SwapChain.cpp" />
+    <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="VulkanInstance.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
