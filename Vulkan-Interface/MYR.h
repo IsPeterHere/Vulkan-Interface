@@ -175,6 +175,7 @@ private:
     Pipeline* pipeline;
 
     VkCommandPool commandPool;
+    VkCommandPool transientCommandPool;
     std::vector<VkCommandBuffer> commandBuffers;
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
