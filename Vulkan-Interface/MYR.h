@@ -1,5 +1,9 @@
 #pragma once
 #define GLFW_INCLUDE_VULKAN
+#ifdef MAIN
+#define VMA_IMPLEMENTATION
+#endif
+#include "vk_mem_alloc.h"
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <optional>
@@ -92,11 +96,13 @@ public:
     SwapChainSupportDetails querySwapChainSupport();
     QueueFamilyIndices findQueueFamilies();
     bool isDeviceSuitable();
+    void initAllocator(VkInstance);
 
     VkDevice getHandle() const { return device; }
     VkPhysicalDevice getPhysicalDevice() { return physicalDevice; }
     VkQueue getGraphicsQueue() { return graphicsQueue; }
     VkQueue getPresentQueue() { return presentQueue; }
+    VmaAllocator getAllocator() { return allocator; }
 private:
     VkSurfaceKHR surface;
 
@@ -105,6 +111,8 @@ private:
 
     VkQueue graphicsQueue;
     VkQueue presentQueue;
+
+    VmaAllocator allocator;
 };
 
 
@@ -177,7 +185,8 @@ private:
     VkCommandPool commandPool;
     VkCommandPool transientCommandPool;
     std::vector<VkCommandBuffer> commandBuffers;
+
+    VmaAllocation vertexBufferAllocation;
     VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
     uint32_t vertex_count;
 };

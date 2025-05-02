@@ -3,15 +3,14 @@
 
 
 uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice);
-void createBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+void createBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlagBits info, VkBuffer& buffer, VmaAllocation& allocation);
 void copyBuffer(Device* device, VkCommandPool transientCommandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 
 Buffers::Buffers(Device* device, Pipeline* pipeline) : device(device), pipeline(pipeline) {}
 Buffers::~Buffers()
 {
-    vkDestroyBuffer(device->getHandle(), vertexBuffer, nullptr);
-    vkFreeMemory(device->getHandle(), vertexBufferMemory, nullptr);
+    vmaDestroyBuffer(device->getAllocator(), vertexBuffer, vertexBufferAllocation);
 	vkDestroyCommandPool(device->getHandle(), commandPool, nullptr);
     vkDestroyCommandPool(device->getHandle(), transientCommandPool, nullptr);
 }
@@ -117,19 +116,18 @@ void Buffers::initVertexBuffer(const std::vector<Vertex> vertices)
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
     VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+    VmaAllocation stagingBufferAllocation;
+    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT , stagingBuffer, stagingBufferAllocation);
 
     void* data;
-    vkMapMemory(device->getHandle(), stagingBufferMemory, 0, bufferSize, 0, &data);
+    vmaMapMemory(device->getAllocator(), stagingBufferAllocation, & data);
     memcpy(data, vertices.data(), (size_t)bufferSize);
-    vkUnmapMemory(device->getHandle(), stagingBufferMemory);
+    vmaUnmapMemory(device->getAllocator(), stagingBufferAllocation);
 
-    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, static_cast<VmaAllocationCreateFlagBits>(0), vertexBuffer, vertexBufferAllocation);
 
     copyBuffer(device,transientCommandPool,stagingBuffer, vertexBuffer, bufferSize);
-    vkDestroyBuffer(device->getHandle(), stagingBuffer, nullptr);
-    vkFreeMemory(device->getHandle(), stagingBufferMemory, nullptr);
+    vmaDestroyBuffer(device->getAllocator(), stagingBuffer, stagingBufferAllocation);
 }
 
 uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties,VkPhysicalDevice physicalDevice)
@@ -146,30 +144,20 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties,Vk
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-void createBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+void createBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlagBits info, VkBuffer& buffer, VmaAllocation& allocation) {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size = size;
     bufferInfo.usage = usage;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateBuffer(device->getHandle(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+    allocInfo.flags = info;
+
+    if (vmaCreateBuffer(device->getAllocator(), &bufferInfo, &allocInfo, &buffer, &allocation, nullptr) != VK_SUCCESS)
         throw std::runtime_error("failed to create buffer!");
-    }
-
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device->getHandle(), buffer, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties, device->getPhysicalDevice());
-
-    if (vkAllocateMemory(device->getHandle(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate buffer memory!");
-    }
-
-    vkBindBufferMemory(device->getHandle(), buffer, bufferMemory, 0);
+    
 }
 
 void copyBuffer(Device* device, VkCommandPool transientCommandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {

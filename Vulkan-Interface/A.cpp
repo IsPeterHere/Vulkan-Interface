@@ -1,6 +1,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#define MAIN
 #include "MYR.h"
 #include <iostream>
 #include <stdexcept>
@@ -12,11 +13,11 @@ class HelloTriangleApplication
 {
 public:
 
-    const uint32_t WIDTH = 800;
-    const uint32_t HEIGHT = 600;
-    const int MAX_FRAMES_IN_FLIGHT = 2;
+    const uint32_t WIDTH{ 800 };
+    const uint32_t HEIGHT{ 600 };
+    const int MAX_FRAMES_IN_FLIGHT{ 2 };
 
-    const std::vector<Vertex> vertices = 
+    const std::vector<Vertex> vertices
     {
         {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
         {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
@@ -114,6 +115,7 @@ private:
 
         device->pickPhysicalDevice(core->getInstance());
         device->initLogicalDevice(enableValidationLayers);
+        device->initAllocator(core->getInstance());
 
         swapChain->initSwapChain(core->getSurface(),window->getHandle());
         swapChain->initImageViews();
