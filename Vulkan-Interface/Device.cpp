@@ -27,6 +27,7 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice device)
 Device::Device() {}
 Device::~Device()
 {
+    vmaDestroyAllocator(allocator);
     vkDestroyDevice(device, nullptr);
 }
 
@@ -71,9 +72,8 @@ void Device::initLogicalDevice(bool enableValidationLayers)
     }
 
     if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS)
-    {
         throw std::runtime_error("failed to create logical device!");
-    }
+    
 
     vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
@@ -183,4 +183,17 @@ bool Device::isDeviceSuitable() //Check for separate GPU supporting of geometry 
     }
 
     return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader && extensionsSupported && swapChainAdequate;
+}
+
+void Device::initAllocator(VkInstance instance)
+{
+    VmaAllocatorCreateInfo allocatorCreateInfo {};
+    allocatorCreateInfo.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
+    allocatorCreateInfo.physicalDevice = physicalDevice;
+    allocatorCreateInfo.device = device;
+    allocatorCreateInfo.instance = instance;
+
+    if (vmaCreateAllocator(&allocatorCreateInfo, &allocator) != VK_SUCCESS)
+        throw std::runtime_error("failed to create allocator!");
+    
 }

@@ -1,8 +1,15 @@
 #pragma once
 #define GLFW_INCLUDE_VULKAN
+#ifdef MAIN
+#define VMA_IMPLEMENTATION
+#endif
+#include "vk_mem_alloc.h"
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <optional>
+#include <glm/glm.hpp>
+#include <array>
+
 
 const std::vector<const char*> validationLayers{ "VK_LAYER_KHRONOS_validation" };
 
@@ -13,7 +20,13 @@ const std::vector<const char*> deviceExtensions
 
 
 
+struct Vertex {
+    glm::vec2 pos;
+    glm::vec3 color;
 
+    static VkVertexInputBindingDescription getBindingDescription();
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
+};
 
 
 struct QueueFamilyIndices {
@@ -83,11 +96,13 @@ public:
     SwapChainSupportDetails querySwapChainSupport();
     QueueFamilyIndices findQueueFamilies();
     bool isDeviceSuitable();
+    void initAllocator(VkInstance);
 
     VkDevice getHandle() const { return device; }
     VkPhysicalDevice getPhysicalDevice() { return physicalDevice; }
     VkQueue getGraphicsQueue() { return graphicsQueue; }
     VkQueue getPresentQueue() { return presentQueue; }
+    VmaAllocator getAllocator() { return allocator; }
 private:
     VkSurfaceKHR surface;
 
@@ -96,6 +111,8 @@ private:
 
     VkQueue graphicsQueue;
     VkQueue presentQueue;
+
+    VmaAllocator allocator;
 };
 
 
@@ -119,6 +136,7 @@ public:
 
 private:
     Device* device;
+
     VkSwapchainKHR swapChain;
     uint32_t imageCount;
     std::vector<VkImage> swapChainImages;
@@ -141,26 +159,38 @@ public:
     VkRenderPass getRenderPass() { return renderPass; }
 private:
     Device* device;
+
     VkRenderPass renderPass;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
 };
 
-class Command
+class Buffers
 {
 public:
-    Command(Device*, Pipeline*);
-    ~Command();
+    Buffers(Device*, Pipeline*);
+    ~Buffers();
     
     void initCommandPool();
     void initCommandBuffers(const int);
     void recordCommandBuffer(uint32_t, uint32_t, SwapChain* swapChain);
+    void initVertexBuffer(const std::vector<Vertex>);
+    void initIndexBuffer(const std::vector<uint32_t>);
 
-    VkCommandBuffer_T** ofBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
+    VkCommandBuffer_T** refCommandfBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
 
 private:
     Device* device;
     Pipeline* pipeline;
+
     VkCommandPool commandPool;
+    VkCommandPool transientCommandPool;
     std::vector<VkCommandBuffer> commandBuffers;
+
+    VmaAllocation indexBufferAllocation;
+    VkBuffer indexBuffer;
+    uint32_t index_count;
+    VmaAllocation vertexBufferAllocation;
+    VkBuffer vertexBuffer;
+    uint32_t vertex_count;
 };
