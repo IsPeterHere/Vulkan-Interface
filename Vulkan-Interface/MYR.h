@@ -175,6 +175,7 @@ public:
     void initCommandBuffers(const int);
     void recordCommandBuffer(uint32_t, uint32_t, SwapChain* swapChain);
     void initVertexBuffer(const std::vector<Vertex>);
+    void initIndexBuffer(const std::vector<uint32_t>);
 
     VkCommandBuffer_T** refCommandfBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
 
@@ -186,6 +187,9 @@ private:
     VkCommandPool transientCommandPool;
     std::vector<VkCommandBuffer> commandBuffers;
 
+    VmaAllocation indexBufferAllocation;
+    VkBuffer indexBuffer;
+    uint32_t index_count;
     VmaAllocation vertexBufferAllocation;
     VkBuffer vertexBuffer;
     uint32_t vertex_count;

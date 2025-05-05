@@ -17,11 +17,17 @@ public:
     const uint32_t HEIGHT{ 600 };
     const int MAX_FRAMES_IN_FLIGHT{ 2 };
 
-    const std::vector<Vertex> vertices
+    const std::vector<Vertex> vertices = 
     {
-        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+    };
+
+    const std::vector<uint32_t> indices = 
+    {
+    0, 1, 2, 2, 3, 0
     };
 
     HelloTriangleApplication() : 
@@ -127,6 +133,7 @@ private:
 
         buffers->initCommandPool();
         buffers->initVertexBuffer(vertices);
+        buffers->initIndexBuffer(indices);
         buffers->initCommandBuffers(MAX_FRAMES_IN_FLIGHT);
         
 

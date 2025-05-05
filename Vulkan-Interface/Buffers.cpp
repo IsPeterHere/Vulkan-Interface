@@ -10,6 +10,7 @@ void copyBuffer(Device* device, VkCommandPool transientCommandPool, VkBuffer src
 Buffers::Buffers(Device* device, Pipeline* pipeline) : device(device), pipeline(pipeline) {}
 Buffers::~Buffers()
 {
+    vmaDestroyBuffer(device->getAllocator(), indexBuffer, indexBufferAllocation);
     vmaDestroyBuffer(device->getAllocator(), vertexBuffer, vertexBufferAllocation);
 	vkDestroyCommandPool(device->getHandle(), commandPool, nullptr);
     vkDestroyCommandPool(device->getHandle(), transientCommandPool, nullptr);
@@ -84,6 +85,8 @@ void Buffers::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageInde
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(commandBuffers[currentFrameIndex], 0, 1, vertexBuffers, offsets);
 
+    vkCmdBindIndexBuffer(commandBuffers[currentFrameIndex], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
 
     VkViewport viewport{};
     viewport.x = 0.0f;
@@ -99,7 +102,8 @@ void Buffers::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageInde
     scissor.extent = swapChain->getExtent();
     vkCmdSetScissor(commandBuffers[currentFrameIndex], 0, 1, &scissor);
 
-    vkCmdDraw(commandBuffers[currentFrameIndex], vertex_count, 1, 0, 0);
+    vkCmdDrawIndexed(commandBuffers[currentFrameIndex],index_count, 1, 0, 0, 0);
+
 
     vkCmdEndRenderPass(commandBuffers[currentFrameIndex]);
     if (vkEndCommandBuffer(commandBuffers[currentFrameIndex]) != VK_SUCCESS)
@@ -129,6 +133,30 @@ void Buffers::initVertexBuffer(const std::vector<Vertex> vertices)
     copyBuffer(device,transientCommandPool,stagingBuffer, vertexBuffer, bufferSize);
     vmaDestroyBuffer(device->getAllocator(), stagingBuffer, stagingBufferAllocation);
 }
+
+void Buffers::initIndexBuffer(const std::vector<uint32_t> indices)
+{
+    index_count = static_cast<uint32_t>(indices.size());
+
+    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+    VkBuffer stagingBuffer;
+    VmaAllocation stagingBufferAllocation;
+    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, stagingBuffer, stagingBufferAllocation);
+
+    void* data;
+    vmaMapMemory(device->getAllocator(), stagingBufferAllocation, &data);
+    memcpy(data, indices.data(), (size_t)bufferSize);
+    vmaUnmapMemory(device->getAllocator(), stagingBufferAllocation);
+
+    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, static_cast<VmaAllocationCreateFlagBits>(0), indexBuffer, indexBufferAllocation);
+
+    copyBuffer(device, transientCommandPool, stagingBuffer, indexBuffer, bufferSize);
+    vmaDestroyBuffer(device->getAllocator(), stagingBuffer, stagingBufferAllocation);
+}
+
+
+
 
 uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties,VkPhysicalDevice physicalDevice)
 {
