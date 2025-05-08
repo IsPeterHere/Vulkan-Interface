@@ -1,10 +1,11 @@
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
 #define MAIN
 #include "MYR.h"
 #include <iostream>
 #include <stdexcept>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <chrono>
+
 
 const bool enableValidationLayers{true};
 
@@ -30,13 +31,14 @@ public:
     0, 1, 2, 2, 3, 0
     };
 
+
     HelloTriangleApplication() : 
         window(new Window(WIDTH,HEIGHT)),
         core(new Core(enableValidationLayers)), 
         device(new Device()),
         swapChain(new SwapChain(device)),
         pipeline(new Pipeline(device)),
-        buffers(new Buffers(device,pipeline))
+        buffers(new Buffers(device,pipeline, MAX_FRAMES_IN_FLIGHT))
     {
     }
 
@@ -69,7 +71,6 @@ public:
     }
 
 private:
-
 
     Window *window;
     Core* core;
@@ -127,6 +128,7 @@ private:
         swapChain->initImageViews();
 
         pipeline->initRenderPass(swapChain->getImageFormat());
+        pipeline->initDescriptorSetLayout();
         pipeline->initGraphicsPipeline();
 
         swapChain->initFramebuffers(pipeline->getRenderPass());
@@ -134,11 +136,13 @@ private:
         buffers->initCommandPool();
         buffers->initVertexBuffer(vertices);
         buffers->initIndexBuffer(indices);
-        buffers->initCommandBuffers(MAX_FRAMES_IN_FLIGHT);
+        buffers->initUniformBuffers();
+        buffers->initCommandBuffers();
         
 
         createSyncObjects();
     }
+
 
     void createSyncObjects() 
     {
@@ -185,6 +189,8 @@ private:
         vkResetCommandBuffer(*(buffers->refCommandfBuffer(currentFrame)), 0);
         buffers->recordCommandBuffer(currentFrame,imageIndex,swapChain);
 
+        updateUniformBuffer(currentFrame);
+
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
@@ -224,6 +230,22 @@ private:
  
 
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+
+    void updateUniformBuffer(uint32_t currentImage) 
+    {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+        UniformBufferObject ubo{};
+        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.proj = glm::perspective(glm::radians(45.0f), swapChain->getExtent().width / (float) swapChain->getExtent().height, 0.1f, 10.0f);
+        ubo.proj[1][1] *= -1; //GLM originally designed for OpenGL, where the y coordinate is inverted.
+
+        buffers->updateUniformBuffer(currentImage, ubo);
     }
 };
 

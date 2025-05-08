@@ -18,6 +18,12 @@ const std::vector<const char*> deviceExtensions
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
+struct UniformBufferObject 
+{
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 proj;
+};
 
 
 struct Vertex {
@@ -153,6 +159,7 @@ public:
     ~Pipeline();
 
     void initRenderPass(VkFormat);
+    void initDescriptorSetLayout();
     void initGraphicsPipeline();
 
     VkPipeline getHandle() { return graphicsPipeline; }
@@ -163,23 +170,29 @@ private:
     VkRenderPass renderPass;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
+
+    VkDescriptorSetLayout descriptorSetLayout;
 };
 
 class Buffers
 {
 public:
-    Buffers(Device*, Pipeline*);
+    Buffers(Device*, Pipeline*,const int);
     ~Buffers();
     
     void initCommandPool();
-    void initCommandBuffers(const int);
-    void recordCommandBuffer(uint32_t, uint32_t, SwapChain* swapChain);
+    void initCommandBuffers();
+    void recordCommandBuffer(uint32_t, uint32_t, SwapChain*);
     void initVertexBuffer(const std::vector<Vertex>);
     void initIndexBuffer(const std::vector<uint32_t>);
+    void initUniformBuffers();
 
     VkCommandBuffer_T** refCommandfBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
+    void updateUniformBuffer(uint32_t imageIndex, UniformBufferObject ubo) { memcpy(uniformBuffersMapped[imageIndex], &ubo, sizeof(ubo)); }
 
 private:
+    const int MAX_FRAMES_IN_FLIGHT;
+
     Device* device;
     Pipeline* pipeline;
 
@@ -190,7 +203,12 @@ private:
     VmaAllocation indexBufferAllocation;
     VkBuffer indexBuffer;
     uint32_t index_count;
+
     VmaAllocation vertexBufferAllocation;
     VkBuffer vertexBuffer;
     uint32_t vertex_count;
+
+    std::vector<VkBuffer> uniformBuffers;
+    std::vector<VmaAllocation> uniformBuffersAllocation;
+    std::vector<void*> uniformBuffersMapped;
 };
