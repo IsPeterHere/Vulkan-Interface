@@ -134,10 +134,12 @@ private:
         swapChain->initFramebuffers(pipeline->getRenderPass());
 
         buffers->initCommandPool();
+        buffers->initDescriptorPool();
         buffers->initVertexBuffer(vertices);
         buffers->initIndexBuffer(indices);
         buffers->initUniformBuffers();
         buffers->initCommandBuffers();
+        buffers->initDescriptorSets();
         
 
         createSyncObjects();

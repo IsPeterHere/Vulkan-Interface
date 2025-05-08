@@ -164,6 +164,8 @@ public:
 
     VkPipeline getHandle() { return graphicsPipeline; }
     VkRenderPass getRenderPass() { return renderPass; }
+    VkDescriptorSetLayout getDescriptorLayout() { return descriptorSetLayout; }
+    VkPipelineLayout getPipelineLayout() { return pipelineLayout; }
 private:
     Device* device;
 
@@ -186,9 +188,11 @@ public:
     void initVertexBuffer(const std::vector<Vertex>);
     void initIndexBuffer(const std::vector<uint32_t>);
     void initUniformBuffers();
+    void initDescriptorPool();
+    void initDescriptorSets();
 
     VkCommandBuffer_T** refCommandfBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
-    void updateUniformBuffer(uint32_t imageIndex, UniformBufferObject ubo) { memcpy(uniformBuffersMapped[imageIndex], &ubo, sizeof(ubo)); }
+    void updateUniformBuffer(uint32_t imageIndex, UniformBufferObject ubo) { memcpy(uniformBuffersMapped[imageIndex], &ubo, sizeof(UniformBufferObject)); }
 
 private:
     const int MAX_FRAMES_IN_FLIGHT;
@@ -199,6 +203,9 @@ private:
     VkCommandPool commandPool;
     VkCommandPool transientCommandPool;
     std::vector<VkCommandBuffer> commandBuffers;
+
+    VkDescriptorPool descriptorPool;
+    std::vector<VkDescriptorSet> descriptorSets;
 
     VmaAllocation indexBufferAllocation;
     VkBuffer indexBuffer;
@@ -211,4 +218,5 @@ private:
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VmaAllocation> uniformBuffersAllocation;
     std::vector<void*> uniformBuffersMapped;
+
 };
