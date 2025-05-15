@@ -84,6 +84,16 @@ void Pipeline::initDescriptorSetLayout()
 
 }
 
+void Pipeline::addPushConstant(PushConstant pushConstant)
+{
+    VkPushConstantRange range = {};
+    range.stageFlags = pushConstant.stages;
+    range.offset = pushConstant.offset;
+    range.size = pushConstant.size;
+
+    pushConstantRanges.push_back(range);
+}
+
 void Pipeline::initGraphicsPipeline()
 {
     auto vertShaderCode = readFile("vert.spv");
@@ -186,8 +196,8 @@ void Pipeline::initGraphicsPipeline()
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
-    pipelineLayoutInfo.pPushConstantRanges = nullptr;
+    pipelineLayoutInfo.pushConstantRangeCount = pushConstantRanges.size();
+    pipelineLayoutInfo.pPushConstantRanges = pushConstantRanges.data();
 
     if (vkCreatePipelineLayout(device->getHandle(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");

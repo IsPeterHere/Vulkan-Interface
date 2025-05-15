@@ -61,7 +61,7 @@ void Buffers::initCommandBuffers()
         throw std::runtime_error("failed to allocate command buffers!");
     }
 }
-void Buffers::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageIndex, SwapChain* swapChain)
+void Buffers::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageIndex, SwapChain* swapChain,PushConstant &p)
 {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -94,6 +94,9 @@ void Buffers::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageInde
     vkCmdBindIndexBuffer(commandBuffers[currentFrameIndex], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
 
+
+    
+
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -108,7 +111,11 @@ void Buffers::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageInde
     scissor.extent = swapChain->getExtent();
     vkCmdSetScissor(commandBuffers[currentFrameIndex], 0, 1, &scissor);
 
+    
     vkCmdBindDescriptorSets(commandBuffers[currentFrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipelineLayout(), 0, 1, &descriptorSets[currentFrameIndex], 0, nullptr);
+
+    vkCmdPushConstants(commandBuffers[currentFrameIndex], pipeline->getPipelineLayout(), p.stages, p.offset, p.size, p.data);
+
     vkCmdDrawIndexed(commandBuffers[currentFrameIndex],index_count, 1, 0, 0, 0);
 
 

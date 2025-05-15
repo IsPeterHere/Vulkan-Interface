@@ -85,6 +85,8 @@ private:
 
     uint32_t currentFrame = 0;
 
+    PushConstant vary;
+
     void mainLoop()
     {
         while (!glfwWindowShouldClose(window->getHandle())) 
@@ -129,6 +131,7 @@ private:
 
         pipeline->initRenderPass(swapChain->getImageFormat());
         pipeline->initDescriptorSetLayout();
+        createPushConstants();
         pipeline->initGraphicsPipeline();
 
         swapChain->initFramebuffers(pipeline->getRenderPass());
@@ -145,7 +148,13 @@ private:
         createSyncObjects();
     }
 
-
+    glm::vec4 values { 0.10, 0.10, 0.9,1 };
+    void createPushConstants()
+    {
+        
+        vary = PushConstant{ 0,16,&values,VK_SHADER_STAGE_FRAGMENT_BIT};
+        pipeline->addPushConstant(vary);
+    }
     void createSyncObjects() 
     {
         imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -189,7 +198,7 @@ private:
         vkResetFences(device->getHandle(), 1, &inFlightFences[currentFrame]);
 
         vkResetCommandBuffer(*(buffers->refCommandfBuffer(currentFrame)), 0);
-        buffers->recordCommandBuffer(currentFrame,imageIndex,swapChain);
+        buffers->recordCommandBuffer(currentFrame,imageIndex,swapChain,vary);
 
         updateUniformBuffer(currentFrame);
 

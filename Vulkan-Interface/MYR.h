@@ -34,6 +34,13 @@ struct Vertex {
     static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
 };
 
+struct PushConstant
+{
+    uint16_t offset;
+    uint16_t size;
+    void* data;
+    VkShaderStageFlags stages;
+};
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
@@ -161,6 +168,7 @@ public:
     void initRenderPass(VkFormat);
     void initDescriptorSetLayout();
     void initGraphicsPipeline();
+    void addPushConstant(PushConstant);
 
     VkPipeline getHandle() { return graphicsPipeline; }
     VkRenderPass getRenderPass() { return renderPass; }
@@ -174,6 +182,9 @@ private:
     VkPipeline graphicsPipeline;
 
     VkDescriptorSetLayout descriptorSetLayout;
+
+    std::vector<VkPushConstantRange> pushConstantRanges;
+
 };
 
 class Buffers
@@ -184,7 +195,7 @@ public:
     
     void initCommandPool();
     void initCommandBuffers();
-    void recordCommandBuffer(uint32_t, uint32_t, SwapChain*);
+    void recordCommandBuffer(uint32_t, uint32_t, SwapChain*, PushConstant &p);
     void initVertexBuffer(const std::vector<Vertex>);
     void initIndexBuffer(const std::vector<uint32_t>);
     void initUniformBuffers();
