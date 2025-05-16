@@ -139,6 +139,7 @@
   <ItemGroup>
     <ClCompile Include="A.cpp" />
     <ClCompile Include="Buffers.cpp" />
+    <ClCompile Include="Command.cpp" />
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="SwapChain.cpp" />

@@ -38,7 +38,8 @@ public:
         device(new Device()),
         swapChain(new SwapChain(device)),
         pipeline(new Pipeline(device)),
-        buffers(new Buffers(device,pipeline, MAX_FRAMES_IN_FLIGHT))
+        command(new Command(device,pipeline,swapChain,MAX_FRAMES_IN_FLIGHT)),
+        buffers(new Buffers(device,pipeline,command,MAX_FRAMES_IN_FLIGHT))
     {
     }
 
@@ -77,6 +78,7 @@ private:
     Device* device;
     SwapChain* swapChain;
     Pipeline* pipeline;
+    Command* command;
     Buffers* buffers;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
@@ -107,6 +109,7 @@ private:
         }
 
         delete buffers;
+        delete command;
         delete pipeline;
         delete swapChain;
         delete device;
@@ -136,12 +139,13 @@ private:
 
         swapChain->initFramebuffers(pipeline->getRenderPass());
 
-        buffers->initCommandPool();
+        command->initCommandPool();
+        command->initCommandBuffers();
+
         buffers->initDescriptorPool();
         buffers->initVertexBuffer(vertices);
         buffers->initIndexBuffer(indices);
         buffers->initUniformBuffers();
-        buffers->initCommandBuffers();
         buffers->initDescriptorSets();
         
 
@@ -197,8 +201,8 @@ private:
 
         vkResetFences(device->getHandle(), 1, &inFlightFences[currentFrame]);
 
-        vkResetCommandBuffer(*(buffers->refCommandfBuffer(currentFrame)), 0);
-        buffers->recordCommandBuffer(currentFrame,imageIndex,swapChain,vary);
+        vkResetCommandBuffer(*(command->refCommandfBuffer(currentFrame)), 0);
+        command->recordCommandBuffer(currentFrame,imageIndex,vary,buffers->getVertexBuffer(),buffers->getIndexBuffer(),buffers->getIndexCount(),buffers->getDiscriptorSets());
 
         updateUniformBuffer(currentFrame);
 
@@ -210,7 +214,7 @@ private:
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = buffers->refCommandfBuffer(currentFrame);
+        submitInfo.pCommandBuffers = command->refCommandfBuffer(currentFrame);
         VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;

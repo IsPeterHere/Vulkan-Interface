@@ -187,33 +187,58 @@ private:
 
 };
 
+
+class Command
+{
+public:
+    Command(Device*, Pipeline*, SwapChain*, const int);
+    ~Command();
+
+    void initCommandPool();
+    void initCommandBuffers();
+    void recordCommandBuffer(uint32_t, uint32_t, PushConstant& p, VkBuffer, VkBuffer, uint32_t, std::vector<VkDescriptorSet>*);
+
+    VkCommandBuffer_T** refCommandfBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
+    VkCommandPool getTransientCommandPool() { return transientCommandPool; }
+
+private:
+    const int MAX_FRAMES_IN_FLIGHT;
+    Device* device;
+    Pipeline* pipeline;
+    SwapChain* swapChain;
+
+    VkCommandPool commandPool;
+    VkCommandPool transientCommandPool;
+    std::vector<VkCommandBuffer> commandBuffers;
+};
+
+
+
 class Buffers
 {
 public:
-    Buffers(Device*, Pipeline*,const int);
+    Buffers(Device*, Pipeline*, Command*,const int);
     ~Buffers();
-    
-    void initCommandPool();
-    void initCommandBuffers();
-    void recordCommandBuffer(uint32_t, uint32_t, SwapChain*, PushConstant &p);
+
     void initVertexBuffer(const std::vector<Vertex>);
     void initIndexBuffer(const std::vector<uint32_t>);
     void initUniformBuffers();
     void initDescriptorPool();
     void initDescriptorSets();
 
-    VkCommandBuffer_T** refCommandfBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
     void updateUniformBuffer(uint32_t imageIndex, UniformBufferObject ubo) { memcpy(uniformBuffersMapped[imageIndex], &ubo, sizeof(UniformBufferObject)); }
+
+    VkBuffer getVertexBuffer() { return vertexBuffer; }
+    VkBuffer getIndexBuffer() { return indexBuffer; }
+
+    uint32_t getIndexCount() { return index_count; }
+    std::vector<VkDescriptorSet> *getDiscriptorSets() { return &descriptorSets; }
 
 private:
     const int MAX_FRAMES_IN_FLIGHT;
-
     Device* device;
     Pipeline* pipeline;
-
-    VkCommandPool commandPool;
-    VkCommandPool transientCommandPool;
-    std::vector<VkCommandBuffer> commandBuffers;
+    Command* command;
 
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
