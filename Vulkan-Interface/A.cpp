@@ -1,5 +1,7 @@
 #define MAIN
 #include "MYR.h"
+#include "Camera.h"
+#include "Control.h"
 #include <iostream>
 #include <stdexcept>
 #include <glm/glm.hpp>
@@ -39,7 +41,9 @@ public:
         swapChain(new SwapChain(device)),
         pipeline(new Pipeline(device)),
         command(new Command(device,pipeline,swapChain,MAX_FRAMES_IN_FLIGHT)),
-        buffers(new Buffers(device,pipeline,command,MAX_FRAMES_IN_FLIGHT))
+        buffers(new Buffers(device,pipeline,command,MAX_FRAMES_IN_FLIGHT)),
+
+        camera(new Camera())
     {
     }
 
@@ -47,6 +51,7 @@ public:
     {
         window->initWindow();
         initVulkan();
+        control = Control::makeControl(window->getHandle());
         mainLoop();
         cleanup();
     }
@@ -80,6 +85,8 @@ private:
     Pipeline* pipeline;
     Command* command;
     Buffers* buffers;
+    Camera* camera;
+    Control* control;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -94,6 +101,7 @@ private:
         while (!glfwWindowShouldClose(window->getHandle())) 
         {
             glfwPollEvents();
+            control->update_camera(camera,0.25,0.005);
             drawFrame();
         }
 
@@ -101,6 +109,9 @@ private:
     }
     void cleanup()
     {
+        delete control;
+        delete camera;
+
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
         {
             vkDestroySemaphore(device->getHandle(), renderFinishedSemaphores[i], nullptr);
@@ -256,7 +267,7 @@ private:
 
         UniformBufferObject ubo{};
         ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.view = camera->get_look_at();
         ubo.proj = glm::perspective(glm::radians(45.0f), swapChain->getExtent().width / (float) swapChain->getExtent().height, 0.1f, 10.0f);
         ubo.proj[1][1] *= -1; //GLM originally designed for OpenGL, where the y coordinate is inverted.
 
