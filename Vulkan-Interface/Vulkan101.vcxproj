@@ -141,6 +141,8 @@
     <ClCompile Include="Buffers.cpp" />
     <ClCompile Include="Camera.h" />
     <ClCompile Include="Command.cpp" />
+    <ClCompile Include="Control.cpp" />
+    <ClCompile Include="Control.h" />
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="SwapChain.cpp" />

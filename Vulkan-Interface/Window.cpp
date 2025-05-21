@@ -18,7 +18,8 @@ void Window::initWindow()
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);//Do not create an OpenGL context 
 
     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-    if (window == NULL) throw std::runtime_error("failed to GLFW window!");
+    if (window == NULL) 
+        throw std::runtime_error("failed to GLFW window!");
     glfwSetWindowUserPointer(window, this);
 
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);

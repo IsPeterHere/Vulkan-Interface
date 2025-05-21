@@ -1,6 +1,7 @@
 #define MAIN
 #include "MYR.h"
 #include "Camera.h"
+#include "Control.h"
 #include <iostream>
 #include <stdexcept>
 #include <glm/glm.hpp>
@@ -50,6 +51,7 @@ public:
     {
         window->initWindow();
         initVulkan();
+        control = Control::makeControl(window->getHandle());
         mainLoop();
         cleanup();
     }
@@ -84,6 +86,7 @@ private:
     Command* command;
     Buffers* buffers;
     Camera* camera;
+    Control* control;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -98,6 +101,7 @@ private:
         while (!glfwWindowShouldClose(window->getHandle())) 
         {
             glfwPollEvents();
+            control->update_camera(camera,0.25,0.005);
             drawFrame();
         }
 
@@ -105,6 +109,7 @@ private:
     }
     void cleanup()
     {
+        delete control;
         delete camera;
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
