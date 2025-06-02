@@ -12,6 +12,16 @@
 const bool enableValidationLayers{true};
 
 
+
+struct UniformBufferObject
+{
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 proj;
+};
+
+
+
 class HelloTriangleApplication 
 {
 public:
@@ -156,7 +166,7 @@ private:
         buffers->initDescriptorPool();
         buffers->initVertexBuffer(vertices);
         buffers->initIndexBuffer(indices);
-        buffers->initUniformBuffers();
+        buffers->initUniformBuffers(sizeof(UniformBufferObject));
         buffers->initDescriptorSets();
         
 
@@ -271,7 +281,7 @@ private:
         ubo.proj = glm::perspective(glm::radians(45.0f), swapChain->getExtent().width / (float) swapChain->getExtent().height, 0.1f, 100.0f);
         ubo.proj[1][1] *= -1; //GLM originally designed for OpenGL, where the y coordinate is inverted.
 
-        buffers->updateUniformBuffer(currentImage, ubo);
+        buffers->updateUniformBuffer(currentImage, &ubo, sizeof(UniformBufferObject));
     }
 };
 
