@@ -213,7 +213,7 @@ private:
         vkResetFences(device->getHandle(), 1, &inFlightFences[currentFrame]);
 
         vkResetCommandBuffer(*(command->refCommandfBuffer(currentFrame)), 0);
-        command->recordCommandBuffer(currentFrame,imageIndex,vary,buffers->getVertexBuffer(),buffers->getIndexBuffer(),buffers->getIndexCount(),buffers->getDiscriptorSets());
+        command->recordCommandBuffer(currentFrame,imageIndex,buffers->getVertexBuffer(),buffers->getIndexBuffer(),buffers->getIndexCount(),buffers->getDiscriptorSets());
 
         updateUniformBuffer(currentFrame);
 
@@ -268,7 +268,7 @@ private:
         UniformBufferObject ubo{};
         ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         ubo.view = camera->get_look_at();
-        ubo.proj = glm::perspective(glm::radians(45.0f), swapChain->getExtent().width / (float) swapChain->getExtent().height, 0.1f, 10.0f);
+        ubo.proj = glm::perspective(glm::radians(45.0f), swapChain->getExtent().width / (float) swapChain->getExtent().height, 0.1f, 100.0f);
         ubo.proj[1][1] *= -1; //GLM originally designed for OpenGL, where the y coordinate is inverted.
 
         buffers->updateUniformBuffer(currentImage, ubo);

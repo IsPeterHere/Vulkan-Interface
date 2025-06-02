@@ -174,6 +174,8 @@ public:
     VkRenderPass getRenderPass() { return renderPass; }
     VkDescriptorSetLayout getDescriptorLayout() { return descriptorSetLayout; }
     VkPipelineLayout getPipelineLayout() { return pipelineLayout; }
+
+    std::vector<PushConstant>& getPushConstants() { return pushConstants; }
 private:
     Device* device;
 
@@ -183,6 +185,7 @@ private:
 
     VkDescriptorSetLayout descriptorSetLayout;
 
+    std::vector<PushConstant> pushConstants;
     std::vector<VkPushConstantRange> pushConstantRanges;
 
 };
@@ -196,7 +199,7 @@ public:
 
     void initCommandPool();
     void initCommandBuffers();
-    void recordCommandBuffer(uint32_t, uint32_t, PushConstant& p, VkBuffer, VkBuffer, uint32_t, std::vector<VkDescriptorSet>*);
+    void recordCommandBuffer(uint32_t, uint32_t, VkBuffer, VkBuffer, uint32_t, std::vector<VkDescriptorSet>*);
 
     VkCommandBuffer_T** refCommandfBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
     VkCommandPool getTransientCommandPool() { return transientCommandPool; }

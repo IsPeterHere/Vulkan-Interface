@@ -86,6 +86,8 @@ void Pipeline::initDescriptorSetLayout()
 
 void Pipeline::addPushConstant(PushConstant pushConstant)
 {
+    pushConstants.push_back(pushConstant);
+
     VkPushConstantRange range = {};
     range.stageFlags = pushConstant.stages;
     range.offset = pushConstant.offset;
