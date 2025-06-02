@@ -18,14 +18,6 @@ const std::vector<const char*> deviceExtensions
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-struct UniformBufferObject 
-{
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
-};
-
-
 struct Vertex {
     glm::vec2 pos;
     glm::vec3 color;
@@ -225,11 +217,11 @@ public:
 
     void initVertexBuffer(const std::vector<Vertex>);
     void initIndexBuffer(const std::vector<uint32_t>);
-    void initUniformBuffers();
+    void initUniformBuffers(size_t);
     void initDescriptorPool();
     void initDescriptorSets();
 
-    void updateUniformBuffer(uint32_t imageIndex, UniformBufferObject ubo) { memcpy(uniformBuffersMapped[imageIndex], &ubo, sizeof(UniformBufferObject)); }
+    void updateUniformBuffer(uint32_t imageIndex, void* ubo,size_t uboSize) { memcpy(uniformBuffersMapped[imageIndex], ubo, uboSize); }
 
     VkBuffer getVertexBuffer() { return vertexBuffer; }
     VkBuffer getIndexBuffer() { return indexBuffer; }

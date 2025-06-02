@@ -63,16 +63,14 @@ void Buffers::initIndexBuffer(const std::vector<uint32_t> indices)
     vmaDestroyBuffer(device->getAllocator(), stagingBuffer, stagingBufferAllocation);
 }
 
-void Buffers::initUniformBuffers()
+void Buffers::initUniformBuffers(size_t uboSize)
 {
-    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
     uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersAllocation.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        createBuffer(device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, uniformBuffers[i], uniformBuffersAllocation[i]);
+        createBuffer(device, uboSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, uniformBuffers[i], uniformBuffersAllocation[i]);
         vmaMapMemory(device->getAllocator(), uniformBuffersAllocation[i], &uniformBuffersMapped[i]);
     }
 }
