@@ -164,8 +164,7 @@ private:
         command->initCommandBuffers();
 
         buffers->initDescriptorPool();
-        buffers->initVertexBuffer(vertices);
-        buffers->initIndexBuffer(indices);
+        buffers->initVIBuffer(vertices, indices);
         buffers->initUniformBuffers(sizeof(UniformBufferObject));
         buffers->initDescriptorSets();
         
@@ -223,7 +222,7 @@ private:
         vkResetFences(device->getHandle(), 1, &inFlightFences[currentFrame]);
 
         vkResetCommandBuffer(*(command->refCommandfBuffer(currentFrame)), 0);
-        command->recordCommandBuffer(currentFrame,imageIndex,buffers->getVertexBuffer(),buffers->getIndexBuffer(),buffers->getIndexCount(),buffers->getDiscriptorSets());
+        command->recordCommandBuffer(currentFrame,imageIndex,buffers->getVIBuffer(),buffers->getIndexCount(),buffers->getDiscriptorSets());
 
         updateUniformBuffer(currentFrame);
 
