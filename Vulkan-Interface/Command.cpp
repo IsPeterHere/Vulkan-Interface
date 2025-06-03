@@ -47,7 +47,7 @@ void Command::initCommandBuffers()
         throw std::runtime_error("failed to allocate command buffers!");
     }
 }
-void Command::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageIndex, VkBuffer vertexBuffer, VkBuffer indexBuffer,uint32_t index_count, std::vector<VkDescriptorSet> *descriptorSets)
+void Command::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageIndex, VkBuffer viBuffer,uint32_t index_count, std::vector<VkDescriptorSet> *descriptorSets)
 {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -73,14 +73,11 @@ void Command::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageInde
 
     vkCmdBindPipeline(commandBuffers[currentFrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getHandle());
 
-    VkBuffer vertexBuffers[] = { vertexBuffer };
-    VkDeviceSize offsets[] = { 0 };
+    VkBuffer vertexBuffers[] = { viBuffer };
+    VkDeviceSize offsets[] = { sizeof(uint32_t) * index_count };
     vkCmdBindVertexBuffers(commandBuffers[currentFrameIndex], 0, 1, vertexBuffers, offsets);
 
-    vkCmdBindIndexBuffer(commandBuffers[currentFrameIndex], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-
-
+    vkCmdBindIndexBuffer(commandBuffers[currentFrameIndex], viBuffer, 0, VK_INDEX_TYPE_UINT32);
 
 
     VkViewport viewport{};

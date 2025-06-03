@@ -3,7 +3,7 @@
 
 uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice);
 void createBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer& buffer, VmaAllocation& allocation);
-void copyBuffer(Device* device, VkCommandPool transientCommandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+void copyBuffer(Device* device, VkCommandPool transientCommandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size);
 
 
 Buffers::Buffers(Device* device, Pipeline* pipeline,Command* command, const int MAX_FRAMES_IN_FLIGHT) : device(device), pipeline(pipeline), MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT), command(command){}
@@ -15,51 +15,47 @@ Buffers::~Buffers()
         vmaDestroyBuffer(device->getAllocator(), uniformBuffers[i], uniformBuffersAllocation[i]);
     }
 
-    vmaDestroyBuffer(device->getAllocator(), indexBuffer, indexBufferAllocation);
-    vmaDestroyBuffer(device->getAllocator(), vertexBuffer, vertexBufferAllocation);
+    vmaDestroyBuffer(device->getAllocator(), viBuffer, viBufferAllocation);
     vkDestroyDescriptorPool(device->getHandle(), descriptorPool, nullptr);
 }
 
-void Buffers::initVertexBuffer(const std::vector<Vertex> vertices)
+void Buffers::initVIBuffer(const std::vector<Vertex> vertices, const std::vector<uint32_t> indices)
 {
     vertex_count = static_cast<uint32_t>(vertices.size());
-
-
-    VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-
-    VkBuffer stagingBuffer;
-    VmaAllocation stagingBufferAllocation;
-    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT , stagingBuffer, stagingBufferAllocation);
-
-    void* data;
-    vmaMapMemory(device->getAllocator(), stagingBufferAllocation, & data);
-    memcpy(data, vertices.data(), (size_t)bufferSize);
-    vmaUnmapMemory(device->getAllocator(), stagingBufferAllocation);
-
-    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, static_cast<VmaAllocationCreateFlagBits>(0), vertexBuffer, vertexBufferAllocation);
-
-    copyBuffer(device,command->getTransientCommandPool(), stagingBuffer, vertexBuffer, bufferSize);
-    vmaDestroyBuffer(device->getAllocator(), stagingBuffer, stagingBufferAllocation);
-}
-
-void Buffers::initIndexBuffer(const std::vector<uint32_t> indices)
-{
     index_count = static_cast<uint32_t>(indices.size());
 
-    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+    VkDeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
+    VkDeviceSize indexBufferSize = sizeof(indices[0]) * indices.size();
+    VkDeviceSize viBufferSize = vertexBufferSize + indexBufferSize;
 
     VkBuffer stagingBuffer;
     VmaAllocation stagingBufferAllocation;
-    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, stagingBuffer, stagingBufferAllocation);
 
-    void* data;
-    vmaMapMemory(device->getAllocator(), stagingBufferAllocation, &data);
-    memcpy(data, indices.data(), (size_t)bufferSize);
+    createBuffer(device, viBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, static_cast<VmaAllocationCreateFlagBits>(0), viBuffer, viBufferAllocation);
+
+
+
+    createBuffer(device, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, stagingBuffer, stagingBufferAllocation);
+
+    void* idata;
+    vmaMapMemory(device->getAllocator(), stagingBufferAllocation, &idata);
+    memcpy(idata, indices.data(), (size_t)indexBufferSize);
     vmaUnmapMemory(device->getAllocator(), stagingBufferAllocation);
 
-    createBuffer(device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, static_cast<VmaAllocationCreateFlagBits>(0), indexBuffer, indexBufferAllocation);
+    copyBuffer(device, command->getTransientCommandPool(), stagingBuffer, viBuffer,0, indexBufferSize);
 
-    copyBuffer(device, command->getTransientCommandPool(), stagingBuffer, indexBuffer, bufferSize);
+    vmaDestroyBuffer(device->getAllocator(), stagingBuffer, stagingBufferAllocation);
+
+
+    createBuffer(device, vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, stagingBuffer, stagingBufferAllocation);
+
+    void* vdata;
+    vmaMapMemory(device->getAllocator(), stagingBufferAllocation, &vdata);
+    memcpy(vdata, vertices.data(), (size_t)vertexBufferSize);
+    vmaUnmapMemory(device->getAllocator(), stagingBufferAllocation);
+
+    copyBuffer(device,command->getTransientCommandPool(), stagingBuffer, viBuffer,sizeof(indices[0])*index_count, vertexBufferSize);
+
     vmaDestroyBuffer(device->getAllocator(), stagingBuffer, stagingBufferAllocation);
 }
 
@@ -158,7 +154,7 @@ void createBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, V
     
 }
 
-void copyBuffer(Device* device, VkCommandPool transientCommandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+void copyBuffer(Device* device, VkCommandPool transientCommandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size) {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -175,8 +171,8 @@ void copyBuffer(Device* device, VkCommandPool transientCommandPool, VkBuffer src
     vkBeginCommandBuffer(commandBuffer, &beginInfo);
 
     VkBufferCopy copyRegion{};
-    copyRegion.srcOffset = 0; // Optional
-    copyRegion.dstOffset = 0; // Optional
+    copyRegion.srcOffset = 0;
+    copyRegion.dstOffset = dst_offset;
     copyRegion.size = size;
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 

@@ -191,7 +191,7 @@ public:
 
     void initCommandPool();
     void initCommandBuffers();
-    void recordCommandBuffer(uint32_t, uint32_t, VkBuffer, VkBuffer, uint32_t, std::vector<VkDescriptorSet>*);
+    void recordCommandBuffer(uint32_t, uint32_t, VkBuffer, uint32_t, std::vector<VkDescriptorSet>*);
 
     VkCommandBuffer_T** refCommandfBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
     VkCommandPool getTransientCommandPool() { return transientCommandPool; }
@@ -215,16 +215,14 @@ public:
     Buffers(Device*, Pipeline*, Command*,const int);
     ~Buffers();
 
-    void initVertexBuffer(const std::vector<Vertex>);
-    void initIndexBuffer(const std::vector<uint32_t>);
+    void initVIBuffer(const std::vector<Vertex>, const std::vector<uint32_t>);
     void initUniformBuffers(size_t);
     void initDescriptorPool();
     void initDescriptorSets();
 
-    void updateUniformBuffer(uint32_t imageIndex, void* ubo,size_t uboSize) { memcpy(uniformBuffersMapped[imageIndex], ubo, uboSize); }
+    VkBuffer getVIBuffer() { return viBuffer; }
 
-    VkBuffer getVertexBuffer() { return vertexBuffer; }
-    VkBuffer getIndexBuffer() { return indexBuffer; }
+    void updateUniformBuffer(uint32_t imageIndex, void* ubo,size_t uboSize) { memcpy(uniformBuffersMapped[imageIndex], ubo, uboSize); }
 
     uint32_t getIndexCount() { return index_count; }
     std::vector<VkDescriptorSet> *getDiscriptorSets() { return &descriptorSets; }
@@ -238,12 +236,9 @@ private:
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
 
-    VmaAllocation indexBufferAllocation;
-    VkBuffer indexBuffer;
+    VmaAllocation viBufferAllocation;
+    VkBuffer viBuffer;
     uint32_t index_count;
-
-    VmaAllocation vertexBufferAllocation;
-    VkBuffer vertexBuffer;
     uint32_t vertex_count;
 
     std::vector<VkBuffer> uniformBuffers;
