@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <optional>
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <array>
 
@@ -19,7 +20,7 @@ const std::vector<const char*> deviceExtensions
 };
 
 struct Vertex {
-    glm::vec2 pos;
+    glm::vec3 pos;
     glm::vec3 color;
 
     static VkVertexInputBindingDescription getBindingDescription();
