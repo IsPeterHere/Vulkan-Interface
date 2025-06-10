@@ -1,9 +1,8 @@
 #include "MYR.h"
 #include <stdexcept>
 
-uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice);
 void createBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer& buffer, VmaAllocation& allocation);
-void copyBuffer(Device* device, VkCommandPool transientCommandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size);
+void copyBuffer(Device* device, Command* command, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size);
 
 
 Buffers::Buffers(Device* device, Pipeline* pipeline,Command* command, const int MAX_FRAMES_IN_FLIGHT) : device(device), pipeline(pipeline), MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT), command(command){}
@@ -42,7 +41,7 @@ void Buffers::initVIBuffer(const std::vector<Vertex> vertices, const std::vector
     memcpy(idata, indices.data(), (size_t)indexBufferSize);
     vmaUnmapMemory(device->getAllocator(), stagingBufferAllocation);
 
-    copyBuffer(device, command->getTransientCommandPool(), stagingBuffer, viBuffer,0, indexBufferSize);
+    copyBuffer(device, command, stagingBuffer, viBuffer,0, indexBufferSize);
 
     vmaDestroyBuffer(device->getAllocator(), stagingBuffer, stagingBufferAllocation);
 
@@ -54,7 +53,7 @@ void Buffers::initVIBuffer(const std::vector<Vertex> vertices, const std::vector
     memcpy(vdata, vertices.data(), (size_t)vertexBufferSize);
     vmaUnmapMemory(device->getAllocator(), stagingBufferAllocation);
 
-    copyBuffer(device,command->getTransientCommandPool(), stagingBuffer, viBuffer,sizeof(indices[0])*index_count, vertexBufferSize);
+    copyBuffer(device,command, stagingBuffer, viBuffer,sizeof(indices[0])*index_count, vertexBufferSize);
 
     vmaDestroyBuffer(device->getAllocator(), stagingBuffer, stagingBufferAllocation);
 }
@@ -124,20 +123,6 @@ void Buffers::initDescriptorSets()
     
 }
 
-uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties,VkPhysicalDevice physicalDevice)
-{
-    VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-
-    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) 
-    {
-        if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-            return i;
-    }
-
-    throw std::runtime_error("failed to find suitable memory type!");
-}
-
 void createBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer& buffer, VmaAllocation& allocation) {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -154,21 +139,9 @@ void createBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, V
     
 }
 
-void copyBuffer(Device* device, VkCommandPool transientCommandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size) {
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = transientCommandPool;
-    allocInfo.commandBufferCount = 1;
+void copyBuffer(Device* device, Command* command, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size) {
 
-    VkCommandBuffer commandBuffer;
-    vkAllocateCommandBuffers(device->getHandle(), &allocInfo, &commandBuffer);
-
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+    VkCommandBuffer commandBuffer = command->beginSingleTimeCommands();
 
     VkBufferCopy copyRegion{};
     copyRegion.srcOffset = 0;
@@ -176,15 +149,6 @@ void copyBuffer(Device* device, VkCommandPool transientCommandPool, VkBuffer src
     copyRegion.size = size;
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-    vkEndCommandBuffer(commandBuffer);
-
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
-
-    vkQueueSubmit(device->getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(device->getGraphicsQueue());
-
-    vkFreeCommandBuffers(device->getHandle(), transientCommandPool, 1, &commandBuffer);
+    command->endSingleTimeCommands(commandBuffer);
 }
+    
