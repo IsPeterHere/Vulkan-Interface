@@ -5,10 +5,15 @@
 VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* window);
+bool hasStencilComponent(VkFormat format) { return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT; }
 
 SwapChain::SwapChain(Device* device) : device(device) {}
 SwapChain::~SwapChain()
 {
+    
+    vkDestroyImageView(device->getHandle(), depthImageView, nullptr);
+    vmaDestroyImage(device->getAllocator(), depthImage, depthImageAllocation);
+
     for (auto framebuffer : Framebuffers) {
         vkDestroyFramebuffer(device->getHandle(), framebuffer, nullptr);
     }
@@ -106,13 +111,13 @@ void SwapChain::initFramebuffers(VkRenderPass renderPass)
 
     for (size_t i = 0; i < imageCount; i++)
     {
-        VkImageView attachments[] = { swapChainImageViews[i] };
+        std::vector <VkImageView> attachments = { swapChainImageViews[i],depthImageView };
 
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.renderPass = renderPass;
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.attachmentCount = attachments.size();
+        framebufferInfo.pAttachments = attachments.data();
         framebufferInfo.width = swapChainExtent.width;
         framebufferInfo.height = swapChainExtent.height;
         framebufferInfo.layers = 1;
@@ -124,7 +129,16 @@ void SwapChain::initFramebuffers(VkRenderPass renderPass)
     }
 }
 
+void SwapChain::initDepthStencil(ImageManager* imageManager)
+{
+    VkFormat depthFormat = device->findDepthFormat();
 
+    imageManager->createImage(getExtent().width,getExtent().height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageAllocation);
+    depthImageView = imageManager->createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+    //imageManager->transitionImageLayout(depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, hasStencilComponent(depthFormat));
+
+}
 
 
 

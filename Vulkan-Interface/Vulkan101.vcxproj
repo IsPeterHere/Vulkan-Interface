@@ -143,8 +143,8 @@
     <ClCompile Include="Command.cpp" />
     <ClCompile Include="Control.cpp" />
     <ClCompile Include="Control.h" />
-    <ClCompile Include="DepthStencil.cpp" />
     <ClCompile Include="Device.cpp" />
+    <ClCompile Include="ImageManager.cpp" />
     <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="SwapChain.cpp" />
     <ClCompile Include="Vertex.cpp" />

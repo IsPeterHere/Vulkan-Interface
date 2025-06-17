@@ -51,6 +51,7 @@ struct SwapChainSupportDetails
     std::vector<VkPresentModeKHR> presentModes;
 };
 
+class ImageManager;
 
 class Window
 {
@@ -102,10 +103,9 @@ public:
     SwapChainSupportDetails querySwapChainSupport();
     QueueFamilyIndices findQueueFamilies();
     bool isDeviceSuitable();
+    VkFormat findDepthFormat();
 
     void initAllocator(VkInstance);
-    void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage&, VmaAllocation);
-    VkImageView createImageView(VkImage, VkFormat, VkImageAspectFlags);
 
     VkDevice getHandle() const { return device; }
     VkPhysicalDevice getPhysicalDevice() { return physicalDevice; }
@@ -133,7 +133,8 @@ public:
 
     void initSwapChain(VkSurfaceKHR, GLFWwindow*);
     void initImageViews();
-    void initFramebuffers(VkRenderPass renderPass);
+    void initDepthStencil(ImageManager*);
+    void initFramebuffers(VkRenderPass);
 
 
     VkSwapchainKHR getHandle() { return swapChain; }
@@ -153,20 +154,6 @@ private:
     std::vector<VkFramebuffer> Framebuffers;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
-};
-
-
-class DepthStencil
-{
-public:
-    DepthStencil(Device*, SwapChain*);
-    ~DepthStencil();
-
-    void initDepthStencil();
-
-private:
-    Device* device;
-    SwapChain* swapChain;
 
     VkImage depthImage;
     VmaAllocation depthImageAllocation;
@@ -190,6 +177,7 @@ public:
     VkPipelineLayout getPipelineLayout() { return pipelineLayout; }
 
     std::vector<PushConstant>& getPushConstants() { return pushConstants; }
+
 private:
     Device* device;
 
@@ -232,6 +220,21 @@ private:
 };
 
 
+class ImageManager
+{
+public:
+    ImageManager(Device*, Command*);
+    ~ImageManager();
+
+
+    void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage&, VmaAllocation);
+    VkImageView createImageView(VkImage, VkFormat, VkImageAspectFlags);
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, bool stencilComponent = false);
+
+private:
+    Device* device;
+    Command* command;
+};
 
 class Buffers
 {

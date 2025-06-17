@@ -57,6 +57,7 @@ public:
         swapChain(new SwapChain(device)),
         pipeline(new Pipeline(device)),
         command(new Command(device,pipeline,swapChain,MAX_FRAMES_IN_FLIGHT)),
+        imageManager(new ImageManager(device,command)),
         buffers(new Buffers(device,pipeline,command,MAX_FRAMES_IN_FLIGHT)),
 
         camera(new Camera())
@@ -88,6 +89,7 @@ public:
 
         swapChain->initSwapChain(core->getSurface(), window->getHandle());
         swapChain->initImageViews();
+        swapChain->initDepthStencil(imageManager);
         swapChain->initFramebuffers(pipeline->getRenderPass());
 
     }
@@ -100,6 +102,7 @@ private:
     SwapChain* swapChain;
     Pipeline* pipeline;
     Command* command;
+    ImageManager* imageManager;
     Buffers* buffers;
     Camera* camera;
     Control* control;
@@ -164,6 +167,7 @@ private:
         createPushConstants();
         pipeline->initGraphicsPipeline();
 
+        swapChain->initDepthStencil(imageManager);
         swapChain->initFramebuffers(pipeline->getRenderPass());
 
         command->initCommandPool();
