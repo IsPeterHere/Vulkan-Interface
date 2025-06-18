@@ -10,9 +10,9 @@ bool hasStencilComponent(VkFormat format) { return format == VK_FORMAT_D32_SFLOA
 SwapChain::SwapChain(Device* device) : device(device) {}
 SwapChain::~SwapChain()
 {
-    
     vkDestroyImageView(device->getHandle(), depthImageView, nullptr);
-    vmaDestroyImage(device->getAllocator(), depthImage, depthImageAllocation);
+    vkDestroyImage(device->getHandle(), depthImage, nullptr);
+    vkFreeMemory(device->getHandle(), depthImageMemory, nullptr);
 
     for (auto framebuffer : Framebuffers) {
         vkDestroyFramebuffer(device->getHandle(), framebuffer, nullptr);
@@ -131,9 +131,9 @@ void SwapChain::initFramebuffers(VkRenderPass renderPass)
 
 void SwapChain::initDepthStencil(ImageManager* imageManager)
 {
-    VkFormat depthFormat = device->findDepthFormat();
+    VkFormat depthFormat{ device->findDepthFormat() };
 
-    imageManager->createImage(getExtent().width,getExtent().height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageAllocation);
+    imageManager->createImage(getExtent().width,getExtent().height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
     depthImageView = imageManager->createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
     //imageManager->transitionImageLayout(depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, hasStencilComponent(depthFormat));

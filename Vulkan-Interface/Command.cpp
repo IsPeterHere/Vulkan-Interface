@@ -118,7 +118,7 @@ VkCommandBuffer Command::beginSingleTimeCommands() {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = commandPool;
+    allocInfo.commandPool = transientCommandPool;
     allocInfo.commandBufferCount = 1;
 
     VkCommandBuffer commandBuffer;
@@ -144,5 +144,5 @@ void Command::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
     vkQueueSubmit(device->getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
     vkQueueWaitIdle(device->getGraphicsQueue());
 
-    vkFreeCommandBuffers(device->getHandle(), commandPool, 1, &commandBuffer);
+    vkFreeCommandBuffers(device->getHandle(), transientCommandPool, 1, &commandBuffer);
 }

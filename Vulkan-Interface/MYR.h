@@ -156,7 +156,7 @@ private:
     VkExtent2D swapChainExtent;
 
     VkImage depthImage;
-    VmaAllocation depthImageAllocation;
+    VkDeviceMemory depthImageMemory;
     VkImageView depthImageView;
 };
 
@@ -227,7 +227,7 @@ public:
     ~ImageManager();
 
 
-    void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage&, VmaAllocation);
+    void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage&, VkDeviceMemory);
     VkImageView createImageView(VkImage, VkFormat, VkImageAspectFlags);
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, bool stencilComponent = false);
 

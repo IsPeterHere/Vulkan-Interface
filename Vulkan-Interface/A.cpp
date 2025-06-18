@@ -128,8 +128,10 @@ private:
     }
     void cleanup()
     {
+        delete swapChain;
         delete control;
         delete camera;
+        delete imageManager;
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
         {
@@ -141,7 +143,6 @@ private:
         delete buffers;
         delete command;
         delete pipeline;
-        delete swapChain;
         delete device;
         delete core;
         delete window;
@@ -167,11 +168,12 @@ private:
         createPushConstants();
         pipeline->initGraphicsPipeline();
 
-        swapChain->initDepthStencil(imageManager);
-        swapChain->initFramebuffers(pipeline->getRenderPass());
 
         command->initCommandPool();
         command->initCommandBuffers();
+
+        swapChain->initDepthStencil(imageManager);
+        swapChain->initFramebuffers(pipeline->getRenderPass());
 
         buffers->initDescriptorPool();
         buffers->initVIBuffer(vertices, indices);

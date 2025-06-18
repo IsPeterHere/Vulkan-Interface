@@ -1,6 +1,7 @@
 #include "MYR.h"
 #include <stdexcept>
 
+uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice);
 
 ImageManager::ImageManager(Device* device, Command* command) : device(device), command(command) {}
 ImageManager::~ImageManager()
@@ -8,7 +9,7 @@ ImageManager::~ImageManager()
 
 }
 
-void ImageManager::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VmaAllocation imageMemoryAllocation)
+void ImageManager::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory imageMemory)
 {
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -25,11 +26,22 @@ void ImageManager::createImage(uint32_t width, uint32_t height, VkFormat format,
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    VmaAllocationCreateInfo allocInfo = {};
-    allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-
-    if (vmaCreateImage(device->getAllocator(), &imageInfo, &allocInfo, &image, &imageMemoryAllocation, nullptr) != VK_SUCCESS)
+    if (vkCreateImage(device->getHandle(), &imageInfo, nullptr, &image) != VK_SUCCESS)
         throw std::runtime_error("failed to allocate image memory!");
+
+    VkMemoryRequirements memRequirements;
+    vkGetImageMemoryRequirements(device->getHandle(), image, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties,device->getPhysicalDevice());
+
+    if (vkAllocateMemory(device->getHandle(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate image memory!");
+    }
+
+    vkBindImageMemory(device->getHandle(), image, imageMemory, 0);
 }
 
 VkImageView ImageManager::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
@@ -46,7 +58,7 @@ VkImageView ImageManager::createImageView(VkImage image, VkFormat format, VkImag
     viewInfo.subresourceRange.layerCount = 1;
 
     VkImageView imageView;
-   
+
     if (vkCreateImageView(device->getHandle(), &viewInfo, nullptr, &imageView) != VK_SUCCESS)
         throw std::runtime_error("failed to create image view!");
 
@@ -116,4 +128,20 @@ void ImageManager::transitionImageLayout(VkImage image, VkFormat format, VkImage
     );
 
     command->endSingleTimeCommands(commandBuffer);
+}
+
+
+
+
+uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice) {
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+        if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+            return i;
+        }
+    }
+
+    throw std::runtime_error("failed to find suitable memory type!");
 }
