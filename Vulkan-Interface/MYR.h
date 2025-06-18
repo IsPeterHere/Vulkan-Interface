@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <optional>
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <array>
 
@@ -19,7 +20,7 @@ const std::vector<const char*> deviceExtensions
 };
 
 struct Vertex {
-    glm::vec2 pos;
+    glm::vec3 pos;
     glm::vec3 color;
 
     static VkVertexInputBindingDescription getBindingDescription();
@@ -50,6 +51,7 @@ struct SwapChainSupportDetails
     std::vector<VkPresentModeKHR> presentModes;
 };
 
+class ImageManager;
 
 class Window
 {
@@ -101,6 +103,8 @@ public:
     SwapChainSupportDetails querySwapChainSupport();
     QueueFamilyIndices findQueueFamilies();
     bool isDeviceSuitable();
+    VkFormat findDepthFormat();
+
     void initAllocator(VkInstance);
 
     VkDevice getHandle() const { return device; }
@@ -129,7 +133,8 @@ public:
 
     void initSwapChain(VkSurfaceKHR, GLFWwindow*);
     void initImageViews();
-    void initFramebuffers(VkRenderPass renderPass);
+    void initDepthStencil(ImageManager*);
+    void initFramebuffers(VkRenderPass);
 
 
     VkSwapchainKHR getHandle() { return swapChain; }
@@ -149,6 +154,10 @@ private:
     std::vector<VkFramebuffer> Framebuffers;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
+
+    VkImage depthImage;
+    VkDeviceMemory depthImageMemory;
+    VkImageView depthImageView;
 };
 
 class Pipeline
@@ -168,6 +177,7 @@ public:
     VkPipelineLayout getPipelineLayout() { return pipelineLayout; }
 
     std::vector<PushConstant>& getPushConstants() { return pushConstants; }
+
 private:
     Device* device;
 
@@ -192,6 +202,8 @@ public:
     void initCommandPool();
     void initCommandBuffers();
     void recordCommandBuffer(uint32_t, uint32_t, VkBuffer, uint32_t, std::vector<VkDescriptorSet>*);
+    VkCommandBuffer beginSingleTimeCommands();
+    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
     VkCommandBuffer_T** refCommandfBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
     VkCommandPool getTransientCommandPool() { return transientCommandPool; }
@@ -208,6 +220,21 @@ private:
 };
 
 
+class ImageManager
+{
+public:
+    ImageManager(Device*, Command*);
+    ~ImageManager();
+
+
+    void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage&, VkDeviceMemory);
+    VkImageView createImageView(VkImage, VkFormat, VkImageAspectFlags);
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, bool stencilComponent = false);
+
+private:
+    Device* device;
+    Command* command;
+};
 
 class Buffers
 {

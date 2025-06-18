@@ -32,15 +32,21 @@ public:
 
     const std::vector<Vertex> vertices = 
     {
-    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+
+    {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}}
     };
 
     const std::vector<uint32_t> indices = 
     {
-    0, 1, 2, 2, 3, 0
+    0, 1, 2, 2, 3, 0,
+    4, 5, 6, 6, 7, 4
     };
 
 
@@ -51,6 +57,7 @@ public:
         swapChain(new SwapChain(device)),
         pipeline(new Pipeline(device)),
         command(new Command(device,pipeline,swapChain,MAX_FRAMES_IN_FLIGHT)),
+        imageManager(new ImageManager(device,command)),
         buffers(new Buffers(device,pipeline,command,MAX_FRAMES_IN_FLIGHT)),
 
         camera(new Camera())
@@ -82,6 +89,7 @@ public:
 
         swapChain->initSwapChain(core->getSurface(), window->getHandle());
         swapChain->initImageViews();
+        swapChain->initDepthStencil(imageManager);
         swapChain->initFramebuffers(pipeline->getRenderPass());
 
     }
@@ -94,6 +102,7 @@ private:
     SwapChain* swapChain;
     Pipeline* pipeline;
     Command* command;
+    ImageManager* imageManager;
     Buffers* buffers;
     Camera* camera;
     Control* control;
@@ -119,8 +128,10 @@ private:
     }
     void cleanup()
     {
+        delete swapChain;
         delete control;
         delete camera;
+        delete imageManager;
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
         {
@@ -132,7 +143,6 @@ private:
         delete buffers;
         delete command;
         delete pipeline;
-        delete swapChain;
         delete device;
         delete core;
         delete window;
@@ -158,10 +168,12 @@ private:
         createPushConstants();
         pipeline->initGraphicsPipeline();
 
-        swapChain->initFramebuffers(pipeline->getRenderPass());
 
         command->initCommandPool();
         command->initCommandBuffers();
+
+        swapChain->initDepthStencil(imageManager);
+        swapChain->initFramebuffers(pipeline->getRenderPass());
 
         buffers->initDescriptorPool();
         buffers->initVIBuffer(vertices, indices);
