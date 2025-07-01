@@ -5,10 +5,14 @@ BufferManager::BufferManager(Device* device, Command* command) : device(device),
 BufferManager::~BufferManager()
 {
 
+    assert(allocations.size() == buffers.size() && "Buffer Count does not Match Allocation count");
+    for (int i {0} ; i< allocations.size(); i++)
+        vmaDestroyBuffer(device->getAllocator(), buffers[i], allocations[i]);
 }
 
 
-void BufferManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer& buffer, VmaAllocation& allocation) {
+void BufferManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer& buffer) 
+{
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size = size;
@@ -19,13 +23,16 @@ void BufferManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vk
     allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
     allocInfo.flags = info;
 
-    if (vmaCreateBuffer(device->getAllocator(), &bufferInfo, &allocInfo, &buffer, &allocation, nullptr) != VK_SUCCESS)
+    allocations.reserve(allocations.size() + 1);
+    buffers.push_back(buffer);
+
+    if (vmaCreateBuffer(device->getAllocator(), &bufferInfo, &allocInfo, &buffer, &allocations.back(), nullptr) != VK_SUCCESS)
         throw std::runtime_error("failed to create buffer!");
 
 }
 
-void BufferManager::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size) {
-
+void BufferManager::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size) 
+{
     VkCommandBuffer commandBuffer = command->beginSingleTimeCommands();
 
     VkBufferCopy copyRegion{};

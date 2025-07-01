@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 #include <array>
 #include <stdexcept>
+#include<unordered_map>
 
 
 const std::vector<const char*> validationLayers{ "VK_LAYER_KHRONOS_validation" };
@@ -243,12 +244,15 @@ public:
     BufferManager(Device*, Command*);
     ~BufferManager();
 
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer& buffer, VmaAllocation& allocation);
-    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size);
+    void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VmaAllocationCreateFlags, VkBuffer&);
+    void copyBuffer(VkBuffer, VkBuffer, uint32_t, VkDeviceSize);
 
 private:
     Device* device;
     Command* command;
+
+    std::vector<VmaAllocation> allocations{};
+    std::vector<VkBuffer&> buffers{};
 };
 class Buffers
 {

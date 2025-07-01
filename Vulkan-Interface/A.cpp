@@ -122,7 +122,7 @@ private:
         while (!glfwWindowShouldClose(window->getHandle())) 
         {
             glfwPollEvents();
-            control->update_camera(camera,0.25,0.005);
+            control->update_camera(camera,0.25,0.05);
             drawFrame();
         }
 
