@@ -12,7 +12,7 @@ BufferManager::~BufferManager()
 }
 
 
-void BufferManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer& buffer) 
+void BufferManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer* buffer) 
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -24,14 +24,14 @@ void BufferManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vk
     allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
     allocInfo.flags = info;
 
-    allocations[buffer] = NULL;
-
-    if (vmaCreateBuffer(device->getAllocator(), &bufferInfo, &allocInfo, &buffer, &(allocations[buffer]), nullptr) != VK_SUCCESS)
+    VmaAllocation* new_allocation { new VmaAllocation };
+    if (vmaCreateBuffer(device->getAllocator(), &bufferInfo, &allocInfo, buffer, new_allocation, nullptr) != VK_SUCCESS)
         throw std::runtime_error("failed to create buffer!");
 
+    allocations[*buffer] = *new_allocation;
 }
 
-void BufferManager::destroyBuffer(VkBuffer& buffer)
+void BufferManager::destroyBuffer(VkBuffer buffer)
 {
     vmaDestroyBuffer(device->getAllocator(), buffer, allocations[buffer]);
     allocations.erase(buffer);
@@ -51,15 +51,12 @@ void BufferManager::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t 
 }
 
 
-void BufferManager::mapMemory(VkBuffer &buffer, void** data)
+void BufferManager::mapMemory(VkBuffer buffer, void** data)
 {
-    std::cout << "CCC" << device->getAllocator();
-    std::cout << "AAA" << allocations[buffer];
-    std::cout << "MMM" << data;
     vmaMapMemory(device->getAllocator(), allocations[buffer], data);
     mappedBuffers.insert(buffer);
 }
-void BufferManager::unmapMemory(VkBuffer &buffer)
+void BufferManager::unmapMemory(VkBuffer buffer)
 {
     vmaUnmapMemory(device->getAllocator(), allocations[buffer]);
     mappedBuffers.erase(buffer);

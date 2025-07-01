@@ -14,7 +14,6 @@
 #include<unordered_map>
 #include<unordered_set>
 
-#include <iostream>
 const std::vector<const char*> validationLayers{ "VK_LAYER_KHRONOS_validation" };
 
 const std::vector<const char*> deviceExtensions
@@ -159,7 +158,6 @@ private:
     VkExtent2D swapChainExtent;
 
     VkImage depthImage;
-    VkDeviceMemory depthImageMemory;
     VkImageView depthImageView;
 };
 
@@ -230,13 +228,15 @@ public:
     ~ImageManager();
 
 
-    void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage&, VkDeviceMemory);
+    void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage*);
     VkImageView createImageView(VkImage, VkFormat, VkImageAspectFlags);
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, bool stencilComponent = false);
 
 private:
     Device* device;
     Command* command;
+
+    std::unordered_map<VkImage, VmaAllocation> allocations{};
 };
 
 class BufferManager
@@ -245,11 +245,11 @@ public:
     BufferManager(Device*, Command*);
     ~BufferManager();
 
-    void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VmaAllocationCreateFlags, VkBuffer&);
-    void destroyBuffer(VkBuffer&);
+    void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VmaAllocationCreateFlags, VkBuffer*);
+    void destroyBuffer(VkBuffer);
     void copyBuffer(VkBuffer, VkBuffer, uint32_t, VkDeviceSize);
-    void mapMemory(VkBuffer&,void**);
-    void unmapMemory(VkBuffer&);
+    void mapMemory(VkBuffer,void**);
+    void unmapMemory(VkBuffer);
 
 private:
     Device* device;

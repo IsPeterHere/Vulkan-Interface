@@ -5,10 +5,11 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, V
 ImageManager::ImageManager(Device* device, Command* command) : device(device), command(command) {}
 ImageManager::~ImageManager()
 {
-
+    for (auto& kv : allocations)
+        vmaDestroyImage(device->getAllocator(), kv.first, kv.second);
 }
 
-void ImageManager::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory imageMemory)
+void ImageManager::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image)
 {
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -25,22 +26,14 @@ void ImageManager::createImage(uint32_t width, uint32_t height, VkFormat format,
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateImage(device->getHandle(), &imageInfo, nullptr, &image) != VK_SUCCESS)
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+
+    VmaAllocation* new_allocation{ new VmaAllocation };
+    if (vmaCreateImage(device->getAllocator(), &imageInfo, &allocInfo, image, new_allocation, nullptr) != VK_SUCCESS)
         throw std::runtime_error("failed to allocate image memory!");
 
-    VkMemoryRequirements memRequirements;
-    vkGetImageMemoryRequirements(device->getHandle(), image, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties,device->getPhysicalDevice());
-
-    if (vkAllocateMemory(device->getHandle(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate image memory!");
-    }
-
-    vkBindImageMemory(device->getHandle(), image, imageMemory, 0);
+    allocations[*image] = *new_allocation;
 }
 
 VkImageView ImageManager::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
