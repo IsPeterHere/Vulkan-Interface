@@ -1,9 +1,4 @@
 #include "MYR.h"
-#include <stdexcept>
-
-void createBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer& buffer, VmaAllocation& allocation);
-void copyBuffer(Device* device, Command* command, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size);
-
 
 Buffers::Buffers(Device* device, Pipeline* pipeline,Command* command, const int MAX_FRAMES_IN_FLIGHT) : device(device), pipeline(pipeline), MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT), command(command){}
 Buffers::~Buffers()
@@ -18,7 +13,7 @@ Buffers::~Buffers()
     vkDestroyDescriptorPool(device->getHandle(), descriptorPool, nullptr);
 }
 
-void Buffers::initVIBuffer(const std::vector<Vertex> vertices, const std::vector<uint32_t> indices)
+void Buffers::initVIBuffer(BufferManager* bufferManager,const std::vector<Vertex> vertices, const std::vector<uint32_t> indices)
 {
     vertex_count = static_cast<uint32_t>(vertices.size());
     index_count = static_cast<uint32_t>(indices.size());
@@ -30,42 +25,42 @@ void Buffers::initVIBuffer(const std::vector<Vertex> vertices, const std::vector
     VkBuffer stagingBuffer;
     VmaAllocation stagingBufferAllocation;
 
-    createBuffer(device, viBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, static_cast<VmaAllocationCreateFlagBits>(0), viBuffer, viBufferAllocation);
+    bufferManager->createBuffer(viBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, static_cast<VmaAllocationCreateFlagBits>(0), viBuffer, viBufferAllocation);
 
 
 
-    createBuffer(device, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, stagingBuffer, stagingBufferAllocation);
+    bufferManager->createBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, stagingBuffer, stagingBufferAllocation);
 
     void* idata;
     vmaMapMemory(device->getAllocator(), stagingBufferAllocation, &idata);
     memcpy(idata, indices.data(), (size_t)indexBufferSize);
     vmaUnmapMemory(device->getAllocator(), stagingBufferAllocation);
 
-    copyBuffer(device, command, stagingBuffer, viBuffer,0, indexBufferSize);
+    bufferManager->copyBuffer(stagingBuffer, viBuffer,0, indexBufferSize);
 
     vmaDestroyBuffer(device->getAllocator(), stagingBuffer, stagingBufferAllocation);
 
 
-    createBuffer(device, vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, stagingBuffer, stagingBufferAllocation);
+    bufferManager->createBuffer(vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, stagingBuffer, stagingBufferAllocation);
 
     void* vdata;
     vmaMapMemory(device->getAllocator(), stagingBufferAllocation, &vdata);
     memcpy(vdata, vertices.data(), (size_t)vertexBufferSize);
     vmaUnmapMemory(device->getAllocator(), stagingBufferAllocation);
 
-    copyBuffer(device,command, stagingBuffer, viBuffer,sizeof(indices[0])*index_count, vertexBufferSize);
+    bufferManager->copyBuffer(stagingBuffer, viBuffer,sizeof(indices[0])*index_count, vertexBufferSize);
 
     vmaDestroyBuffer(device->getAllocator(), stagingBuffer, stagingBufferAllocation);
 }
 
-void Buffers::initUniformBuffers(size_t uboSize)
+void Buffers::initUniformBuffers(BufferManager* bufferManager,size_t uboSize)
 {
     uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersAllocation.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        createBuffer(device, uboSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, uniformBuffers[i], uniformBuffersAllocation[i]);
+        bufferManager->createBuffer(uboSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, uniformBuffers[i], uniformBuffersAllocation[i]);
         vmaMapMemory(device->getAllocator(), uniformBuffersAllocation[i], &uniformBuffersMapped[i]);
     }
 }
@@ -123,32 +118,3 @@ void Buffers::initDescriptorSets()
     
 }
 
-void createBuffer(Device* device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer& buffer, VmaAllocation& allocation) {
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
-    bufferInfo.usage = usage;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    VmaAllocationCreateInfo allocInfo = {};
-    allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-    allocInfo.flags = info;
-
-    if (vmaCreateBuffer(device->getAllocator(), &bufferInfo, &allocInfo, &buffer, &allocation, nullptr) != VK_SUCCESS)
-        throw std::runtime_error("failed to create buffer!");
-    
-}
-
-void copyBuffer(Device* device, Command* command, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size) {
-
-    VkCommandBuffer commandBuffer = command->beginSingleTimeCommands();
-
-    VkBufferCopy copyRegion{};
-    copyRegion.srcOffset = 0;
-    copyRegion.dstOffset = dst_offset;
-    copyRegion.size = size;
-    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-    command->endSingleTimeCommands(commandBuffer);
-}
-    

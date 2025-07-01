@@ -1,5 +1,4 @@
 #include "MYR.h"
-#include <stdexcept>
 
 uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice);
 

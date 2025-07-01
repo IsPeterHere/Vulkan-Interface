@@ -10,6 +10,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <array>
+#include <stdexcept>
 
 
 const std::vector<const char*> validationLayers{ "VK_LAYER_KHRONOS_validation" };
@@ -236,14 +237,27 @@ private:
     Command* command;
 };
 
+class BufferManager
+{
+public:
+    BufferManager(Device*, Command*);
+    ~BufferManager();
+
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer& buffer, VmaAllocation& allocation);
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size);
+
+private:
+    Device* device;
+    Command* command;
+};
 class Buffers
 {
 public:
     Buffers(Device*, Pipeline*, Command*,const int);
     ~Buffers();
 
-    void initVIBuffer(const std::vector<Vertex>, const std::vector<uint32_t>);
-    void initUniformBuffers(size_t);
+    void initVIBuffer(BufferManager* bufferManager, const std::vector<Vertex>, const std::vector<uint32_t>);
+    void initUniformBuffers(BufferManager* bufferManager, size_t);
     void initDescriptorPool();
     void initDescriptorSets();
 
