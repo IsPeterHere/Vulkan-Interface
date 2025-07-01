@@ -12,8 +12,9 @@
 #include <array>
 #include <stdexcept>
 #include<unordered_map>
+#include<unordered_set>
 
-
+#include <iostream>
 const std::vector<const char*> validationLayers{ "VK_LAYER_KHRONOS_validation" };
 
 const std::vector<const char*> deviceExtensions
@@ -245,14 +246,18 @@ public:
     ~BufferManager();
 
     void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VmaAllocationCreateFlags, VkBuffer&);
+    void destroyBuffer(VkBuffer&);
     void copyBuffer(VkBuffer, VkBuffer, uint32_t, VkDeviceSize);
+    void mapMemory(VkBuffer&,void**);
+    void unmapMemory(VkBuffer&);
 
 private:
     Device* device;
     Command* command;
 
-    std::vector<VmaAllocation> allocations{};
-    std::vector<VkBuffer&> buffers{};
+    std::unordered_map<VkBuffer, VmaAllocation> allocations{};
+    std::unordered_set<VkBuffer> mappedBuffers{};
+
 };
 class Buffers
 {
@@ -287,7 +292,6 @@ private:
     uint32_t vertex_count;
 
     std::vector<VkBuffer> uniformBuffers;
-    std::vector<VmaAllocation> uniformBuffersAllocation;
     std::vector<void*> uniformBuffersMapped;
 
 };
