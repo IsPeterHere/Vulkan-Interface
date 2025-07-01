@@ -58,6 +58,7 @@ public:
         pipeline(new Pipeline(device)),
         command(new Command(device,pipeline,swapChain,MAX_FRAMES_IN_FLIGHT)),
         imageManager(new ImageManager(device,command)),
+        bufferManager(new BufferManager(device, command)),
         buffers(new Buffers(device,pipeline,command,MAX_FRAMES_IN_FLIGHT)),
 
         camera(new Camera())
@@ -103,6 +104,7 @@ private:
     Pipeline* pipeline;
     Command* command;
     ImageManager* imageManager;
+    BufferManager* bufferManager;
     Buffers* buffers;
     Camera* camera;
     Control* control;
@@ -120,7 +122,7 @@ private:
         while (!glfwWindowShouldClose(window->getHandle())) 
         {
             glfwPollEvents();
-            control->update_camera(camera,0.25,0.005);
+            control->update_camera(camera,0.25,0.05);
             drawFrame();
         }
 
@@ -132,6 +134,7 @@ private:
         delete control;
         delete camera;
         delete imageManager;
+        delete bufferManager;
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
         {
@@ -176,8 +179,8 @@ private:
         swapChain->initFramebuffers(pipeline->getRenderPass());
 
         buffers->initDescriptorPool();
-        buffers->initVIBuffer(vertices, indices);
-        buffers->initUniformBuffers(sizeof(UniformBufferObject));
+        buffers->initVIBuffer(bufferManager,vertices, indices);
+        buffers->initUniformBuffers(bufferManager, sizeof(UniformBufferObject));
         buffers->initDescriptorSets();
         
 

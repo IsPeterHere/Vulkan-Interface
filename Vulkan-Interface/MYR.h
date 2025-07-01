@@ -10,7 +10,9 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <array>
-
+#include <stdexcept>
+#include<unordered_map>
+#include<unordered_set>
 
 const std::vector<const char*> validationLayers{ "VK_LAYER_KHRONOS_validation" };
 
@@ -156,7 +158,6 @@ private:
     VkExtent2D swapChainExtent;
 
     VkImage depthImage;
-    VkDeviceMemory depthImageMemory;
     VkImageView depthImageView;
 };
 
@@ -227,23 +228,45 @@ public:
     ~ImageManager();
 
 
-    void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage&, VkDeviceMemory);
+    void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage*);
     VkImageView createImageView(VkImage, VkFormat, VkImageAspectFlags);
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, bool stencilComponent = false);
 
 private:
     Device* device;
     Command* command;
+
+    std::unordered_map<VkImage, VmaAllocation> allocations{};
 };
 
+class BufferManager
+{
+public:
+    BufferManager(Device*, Command*);
+    ~BufferManager();
+
+    void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VmaAllocationCreateFlags, VkBuffer*);
+    void destroyBuffer(VkBuffer);
+    void copyBuffer(VkBuffer, VkBuffer, uint32_t, VkDeviceSize);
+    void mapMemory(VkBuffer,void**);
+    void unmapMemory(VkBuffer);
+
+private:
+    Device* device;
+    Command* command;
+
+    std::unordered_map<VkBuffer, VmaAllocation> allocations{};
+    std::unordered_set<VkBuffer> mappedBuffers{};
+
+};
 class Buffers
 {
 public:
     Buffers(Device*, Pipeline*, Command*,const int);
     ~Buffers();
 
-    void initVIBuffer(const std::vector<Vertex>, const std::vector<uint32_t>);
-    void initUniformBuffers(size_t);
+    void initVIBuffer(BufferManager* bufferManager, const std::vector<Vertex>, const std::vector<uint32_t>);
+    void initUniformBuffers(BufferManager* bufferManager, size_t);
     void initDescriptorPool();
     void initDescriptorSets();
 
@@ -269,7 +292,6 @@ private:
     uint32_t vertex_count;
 
     std::vector<VkBuffer> uniformBuffers;
-    std::vector<VmaAllocation> uniformBuffersAllocation;
     std::vector<void*> uniformBuffersMapped;
 
 };

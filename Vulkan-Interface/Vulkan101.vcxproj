@@ -138,6 +138,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="A.cpp" />
+    <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="Buffers.cpp" />
     <ClCompile Include="Camera.h" />
     <ClCompile Include="Command.cpp" />
