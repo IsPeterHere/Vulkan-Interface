@@ -22,7 +22,7 @@ struct UniformBufferObject
 
 
 
-class HelloTriangleApplication 
+class ExampleApplication 
 {
 public:
 
@@ -50,7 +50,7 @@ public:
     };
 
 
-    HelloTriangleApplication() : 
+    ExampleApplication() : 
         window(new Window(WIDTH,HEIGHT)),
         core(new Core(enableValidationLayers)), 
         device(new Device()),
@@ -60,7 +60,6 @@ public:
         imageManager(new ImageManager(device,command)),
         bufferManager(new BufferManager(device, command)),
         buffers(new Buffers(device,pipeline,command,MAX_FRAMES_IN_FLIGHT)),
-
         camera(new Camera())
     {
     }
@@ -303,7 +302,7 @@ int main()
 {
     try 
     {
-        HelloTriangleApplication app;
+        ExampleApplication app;
         app.run();
     }
     catch (const std::exception& e) 

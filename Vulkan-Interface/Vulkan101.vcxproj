@@ -137,7 +137,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="A.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Example.cpp" />
     <ClCompile Include="BufferManager.cpp" />
     <ClCompile Include="Buffers.cpp" />
     <ClCompile Include="Camera.h" />
