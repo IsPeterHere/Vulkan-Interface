@@ -1,5 +1,7 @@
 #include "MYR.h"
 
+using namespace MYR;
+
 Buffers::Buffers(Device* device, Pipeline* pipeline,Command* command, const int MAX_FRAMES_IN_FLIGHT) : device(device), pipeline(pipeline), MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT), command(command){}
 Buffers::~Buffers()
 {

@@ -1,5 +1,7 @@
 #include "MYR.h"
 
+using namespace MYR;
+
 uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice);
 
 ImageManager::ImageManager(Device* device, Command* command) : device(device), command(command) {}

@@ -1,6 +1,8 @@
 #include "MYR.h"
 #include <stdexcept>
 
+using namespace MYR;
+
 Command::Command(Device* device, Pipeline* pipeline, SwapChain* swapChain, const int MAX_FRAMES_IN_FLIGHT) : device(device), pipeline(pipeline), MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT), swapChain(swapChain) {}
 
 Command::~Command()

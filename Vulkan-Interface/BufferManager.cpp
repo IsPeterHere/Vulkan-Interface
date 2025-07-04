@@ -1,5 +1,6 @@
 #include "MYR.h"
 
+using namespace MYR;
 
 BufferManager::BufferManager(Device* device, Command* command) : device(device), command(command) {}
 BufferManager::~BufferManager()

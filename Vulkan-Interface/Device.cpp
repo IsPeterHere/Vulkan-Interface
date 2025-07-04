@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <set>
 
-
+using namespace MYR;
 
 bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features, VkPhysicalDevice physicalDevice);

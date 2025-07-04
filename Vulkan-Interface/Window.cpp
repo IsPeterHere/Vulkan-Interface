@@ -1,6 +1,8 @@
 #include <stdexcept>
 #include "MYR.h"
 
+using namespace MYR;
+
 void framebufferResizeCallback(GLFWwindow*, int, int);
 
 

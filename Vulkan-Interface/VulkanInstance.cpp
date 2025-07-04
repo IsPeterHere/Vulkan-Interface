@@ -1,6 +1,9 @@
 #include"MYR.h"
 #include<iostream>
 
+using namespace MYR;
+
+
 // these functions are extension functions, they are not automatically loaded. We have to look up their addresses ourselves using vkGetInstanceProcAddr (these proxy function handle this in the background.)
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
