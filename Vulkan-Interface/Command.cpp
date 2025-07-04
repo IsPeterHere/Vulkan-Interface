@@ -1,15 +1,17 @@
 #include "MYR.h"
 #include <stdexcept>
 
-Command::Command(Device* device, Pipeline* pipeline, SwapChain* swapChain, const int MAX_FRAMES_IN_FLIGHT) : device(device), pipeline(pipeline), MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT), swapChain(swapChain) {}
+using namespace MYR;
 
-Command::~Command()
+Command_T::Command_T(Device device, Pipeline pipeline, SwapChain swapChain, const int MAX_FRAMES_IN_FLIGHT) : device(device), pipeline(pipeline), MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT), swapChain(swapChain) {}
+
+Command_T::~Command_T()
 {
     vkDestroyCommandPool(device->getHandle(), commandPool, nullptr);
     vkDestroyCommandPool(device->getHandle(), transientCommandPool, nullptr);
 }
 
-void Command::initCommandPool()
+void Command_T::initCommandPool()
 {
     QueueFamilyIndices queueFamilyIndices = device->findQueueFamilies();
 
@@ -33,7 +35,7 @@ void Command::initCommandPool()
         throw std::runtime_error("failed to create command pool!");
     }
 }
-void Command::initCommandBuffers()
+void Command_T::initCommandBuffers()
 {
     commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
@@ -47,7 +49,7 @@ void Command::initCommandBuffers()
         throw std::runtime_error("failed to allocate command buffers!");
     }
 }
-void Command::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageIndex, VkBuffer viBuffer,uint32_t index_count, std::vector<VkDescriptorSet> *descriptorSets)
+void Command_T::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageIndex, VkBuffer viBuffer,uint32_t index_count, std::vector<VkDescriptorSet> *descriptorSets)
 {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -114,7 +116,7 @@ void Command::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageInde
 
 
 
-VkCommandBuffer Command::beginSingleTimeCommands() {
+VkCommandBuffer Command_T::beginSingleTimeCommands() {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -133,7 +135,7 @@ VkCommandBuffer Command::beginSingleTimeCommands() {
     return commandBuffer;
 }
 
-void Command::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
+void Command_T::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
     vkEndCommandBuffer(commandBuffer);
 
     VkSubmitInfo submitInfo{};

@@ -2,14 +2,14 @@
 #include <stdexcept>
 #include <set>
 
-
+using namespace MYR;
 
 bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features, VkPhysicalDevice physicalDevice);
 
 
-Device::Device() {}
-Device::~Device()
+Device_T::Device_T() {}
+Device_T::~Device_T()
 {
     vmaDestroyAllocator(allocator);
     vkDestroyDevice(device, nullptr);
@@ -17,7 +17,7 @@ Device::~Device()
 
 
 //Logical Device set-up
-void Device::initLogicalDevice(bool enableValidationLayers)
+void Device_T::initLogicalDevice(bool enableValidationLayers)
 {
     QueueFamilyIndices indices = findQueueFamilies();
 
@@ -63,7 +63,7 @@ void Device::initLogicalDevice(bool enableValidationLayers)
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
-void Device::pickPhysicalDevice(VkInstance instance)
+void Device_T::pickPhysicalDevice(VkInstance instance)
 {
     uint32_t deviceCount{ 0 };
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -84,7 +84,7 @@ void Device::pickPhysicalDevice(VkInstance instance)
     }
 }
 
-QueueFamilyIndices Device::findQueueFamilies()
+QueueFamilyIndices Device_T::findQueueFamilies()
 {
     QueueFamilyIndices indices;
 
@@ -124,7 +124,7 @@ QueueFamilyIndices Device::findQueueFamilies()
 
 }
 
-SwapChainSupportDetails Device::querySwapChainSupport() {
+SwapChainSupportDetails Device_T::querySwapChainSupport() {
     SwapChainSupportDetails details;
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.capabilities);
@@ -147,7 +147,7 @@ SwapChainSupportDetails Device::querySwapChainSupport() {
     return details;
 }
 
-bool Device::isDeviceSuitable() //Check for separate GPU supporting of geometry shaders
+bool Device_T::isDeviceSuitable() //Check for separate GPU supporting of geometry shaders
 {
     QueueFamilyIndices indices = findQueueFamilies();
     if (!indices.allComplete()) return false;
@@ -169,14 +169,14 @@ bool Device::isDeviceSuitable() //Check for separate GPU supporting of geometry 
     return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader && extensionsSupported && swapChainAdequate;
 }
 
-VkFormat Device::findDepthFormat() {
+VkFormat Device_T::findDepthFormat() {
     return findSupportedFormat(
         { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
         VK_IMAGE_TILING_OPTIMAL,
         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT, physicalDevice
     );
 }
-void Device::initAllocator(VkInstance instance)
+void Device_T::initAllocator(VkInstance instance)
 {
     VmaAllocatorCreateInfo allocatorCreateInfo {};
     allocatorCreateInfo.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;

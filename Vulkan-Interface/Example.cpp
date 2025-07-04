@@ -30,7 +30,7 @@ public:
     const uint32_t HEIGHT{ 600 };
     const int MAX_FRAMES_IN_FLIGHT{ 2 };
 
-    const std::vector<Vertex> vertices = 
+    const std::vector<MYR::Vertex> vertices = 
     {
     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
     {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
@@ -51,15 +51,15 @@ public:
 
 
     ExampleApplication() : 
-        window(new Window(WIDTH,HEIGHT)),
-        core(new Core(enableValidationLayers)), 
-        device(new Device()),
-        swapChain(new SwapChain(device)),
-        pipeline(new Pipeline(device)),
-        command(new Command(device,pipeline,swapChain,MAX_FRAMES_IN_FLIGHT)),
-        imageManager(new ImageManager(device,command)),
-        bufferManager(new BufferManager(device, command)),
-        buffers(new Buffers(device,pipeline,command,MAX_FRAMES_IN_FLIGHT)),
+        window(new MYR::Window_T(WIDTH,HEIGHT)),
+        core(new MYR::Core_T(enableValidationLayers)),
+        device(new MYR::Device_T()),
+        swapChain(new MYR::SwapChain_T(device)),
+        pipeline(new MYR::Pipeline_T(device)),
+        command(new MYR::Command_T(device,pipeline,swapChain,MAX_FRAMES_IN_FLIGHT)),
+        imageManager(new MYR::ImageManager_T(device,command)),
+        bufferManager(new MYR::BufferManager_T(device, command)),
+        buffers(new MYR::Buffers_T(device,pipeline,command,MAX_FRAMES_IN_FLIGHT)),
         camera(new Camera())
     {
     }
@@ -85,7 +85,7 @@ public:
         vkDeviceWaitIdle(device->getHandle());
 
         delete swapChain;
-        swapChain = new SwapChain(device);
+        swapChain = new MYR::SwapChain_T(device);
 
         swapChain->initSwapChain(core->getSurface(), window->getHandle());
         swapChain->initImageViews();
@@ -96,15 +96,15 @@ public:
 
 private:
 
-    Window *window;
-    Core* core;
-    Device* device;
-    SwapChain* swapChain;
-    Pipeline* pipeline;
-    Command* command;
-    ImageManager* imageManager;
-    BufferManager* bufferManager;
-    Buffers* buffers;
+    MYR::Window window;
+    MYR::Core core;
+    MYR::Device device;
+    MYR::SwapChain swapChain;
+    MYR::Pipeline pipeline;
+    MYR::Command command;
+    MYR::ImageManager imageManager;
+    MYR::BufferManager bufferManager;
+    MYR::Buffers buffers;
     Camera* camera;
     Control* control;
 
@@ -114,7 +114,7 @@ private:
 
     uint32_t currentFrame = 0;
 
-    PushConstant vary;
+    MYR::PushConstant vary;
 
     void mainLoop()
     {
@@ -189,10 +189,10 @@ private:
     glm::vec4 values { 0.10, 0.10, 0.9,1 };
     void createPushConstants()
     {
-        
-        vary = PushConstant{ 0,16,&values,VK_SHADER_STAGE_FRAGMENT_BIT};
+        vary = MYR::PushConstant{ 0,16,&values,VK_SHADER_STAGE_FRAGMENT_BIT};
         pipeline->addPushConstant(vary);
     }
+
     void createSyncObjects() 
     {
         imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);

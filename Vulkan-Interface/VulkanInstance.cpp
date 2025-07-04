@@ -1,6 +1,9 @@
 #include"MYR.h"
 #include<iostream>
 
+using namespace MYR;
+
+
 // these functions are extension functions, they are not automatically loaded. We have to look up their addresses ourselves using vkGetInstanceProcAddr (these proxy function handle this in the background.)
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
@@ -84,8 +87,8 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 }
 
 
-Core::Core(bool enableValidationLayers) : enableValidationLayers(enableValidationLayers) {}
-Core::~Core()
+Core_T::Core_T(bool enableValidationLayers) : enableValidationLayers(enableValidationLayers) {}
+Core_T::~Core_T()
 {
     if (enableValidationLayers) {
         DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
@@ -96,7 +99,7 @@ Core::~Core()
 }
 
 
-void Core::initDebugMessenger()
+void Core_T::initDebugMessenger()
 {
     if (!enableValidationLayers) return;
 
@@ -108,7 +111,7 @@ void Core::initDebugMessenger()
     }
 }
 
-void Core::initVulkanInstance()
+void Core_T::initVulkanInstance()
 {
     if (enableValidationLayers && !checkValidationLayerSupport())
     {
@@ -153,7 +156,7 @@ void Core::initVulkanInstance()
 
 }
 
-void Core::initSurface(Window* window)
+void Core_T::initSurface(Window window)
 {
     if (glfwCreateWindowSurface(instance, window->getHandle(), nullptr, &surface) != VK_SUCCESS) {
         throw std::runtime_error("failed to create window surface!");

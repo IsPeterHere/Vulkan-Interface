@@ -3,14 +3,16 @@
 #include <iostream>
 #include <fstream>
 
-static std::vector<char> readFile(const std::string& filename);
-VkShaderModule createShaderModule(const std::vector<char>& code, Device* device);
+using namespace MYR;
 
-Pipeline::Pipeline(Device* device) : device(device)
+static std::vector<char> readFile(const std::string& filename);
+VkShaderModule createShaderModule(const std::vector<char>& code, Device device);
+
+Pipeline_T::Pipeline_T(Device device) : device(device)
 {
 }
 
-Pipeline::~Pipeline()
+Pipeline_T::~Pipeline_T()
 {
     vkDestroyDescriptorSetLayout(device->getHandle(), descriptorSetLayout, nullptr);
     vkDestroyPipeline(device->getHandle(), graphicsPipeline, nullptr);
@@ -19,7 +21,7 @@ Pipeline::~Pipeline()
 }
 
 //Graphics pipeline
-void Pipeline::initRenderPass(VkFormat ImageFormat)
+void Pipeline_T::initRenderPass(VkFormat ImageFormat)
 {
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format = ImageFormat;
@@ -89,7 +91,7 @@ void Pipeline::initRenderPass(VkFormat ImageFormat)
 
 }
 
-void Pipeline::initDescriptorSetLayout()
+void Pipeline_T::initDescriptorSetLayout()
 {
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.binding = 0;
@@ -108,7 +110,7 @@ void Pipeline::initDescriptorSetLayout()
 
 }
 
-void Pipeline::addPushConstant(PushConstant pushConstant)
+void Pipeline_T::addPushConstant(PushConstant pushConstant)
 {
     pushConstants.push_back(pushConstant);
 
@@ -120,7 +122,7 @@ void Pipeline::addPushConstant(PushConstant pushConstant)
     pushConstantRanges.push_back(range);
 }
 
-void Pipeline::initGraphicsPipeline()
+void Pipeline_T::initGraphicsPipeline()
 {
     auto vertShaderCode = readFile("vert.spv");
     auto fragShaderCode = readFile("frag.spv");
@@ -288,7 +290,7 @@ static std::vector<char> readFile(const std::string& filename)
 
     return buffer;
 }
-VkShaderModule createShaderModule(const std::vector<char>& code, Device* device)
+VkShaderModule createShaderModule(const std::vector<char>& code, Device device)
 {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

@@ -1,5 +1,8 @@
 #include"MYR.h"
 
+using namespace MYR;
+
+
 VkVertexInputBindingDescription Vertex::getBindingDescription()
 {
 	VkVertexInputBindingDescription bindingDescription{};
