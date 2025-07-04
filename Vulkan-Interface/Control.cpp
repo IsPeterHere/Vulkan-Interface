@@ -23,8 +23,15 @@ Control* Control::makeControl(GLFWwindow* window)
 
 void Control::update_camera(Camera* camera, double mouse_sensitivity, float movement_velocity)
 {
-	double dx = x_mouse_movement * mouse_sensitivity;
-	double dy = y_mouse_movement * mouse_sensitivity;
+
+	static auto lastTime = std::chrono::high_resolution_clock::now();
+
+	auto current_time = std::chrono::high_resolution_clock::now();
+	float time_ellapsed = std::chrono::duration<float, std::chrono::seconds::period>(current_time - lastTime).count();
+	lastTime = current_time;
+
+	double dx = x_mouse_movement * mouse_sensitivity * time_ellapsed;
+	double dy = y_mouse_movement * mouse_sensitivity * time_ellapsed;
 
 	x_mouse_movement = 0;
 	y_mouse_movement = 0;
@@ -33,13 +40,13 @@ void Control::update_camera(Camera* camera, double mouse_sensitivity, float move
 
 	glm::vec3 delta_position{0,0,0};
 	if (w)
-		delta_position.x += movement_velocity;
+		delta_position.x += movement_velocity * time_ellapsed;
 	if (s)
-		delta_position.x += -movement_velocity;
+		delta_position.x += -movement_velocity * time_ellapsed;
 	if (a)
-		delta_position.y += -movement_velocity;
+		delta_position.y += -movement_velocity * time_ellapsed;
 	if (d)
-		delta_position.y += movement_velocity;
+		delta_position.y += movement_velocity * time_ellapsed;
 
 	camera->position_update(delta_position);
 }
