@@ -6,14 +6,14 @@ using namespace MYR;
 void framebufferResizeCallback(GLFWwindow*, int, int);
 
 
-Window::Window(uint32_t width, uint32_t height) : WIDTH(width), HEIGHT(height) {}
-Window::~Window()
+Window_T::Window_T(uint32_t width, uint32_t height) : WIDTH(width), HEIGHT(height) {}
+Window_T::~Window_T()
 {
     glfwDestroyWindow(window);
     glfwTerminate();
 }
 
-void Window::initWindow()
+void Window_T::initWindow()
 {
     glfwInit();
 
@@ -30,6 +30,6 @@ void Window::initWindow()
 
 void framebufferResizeCallback(GLFWwindow* glfwWindow, int width, int height) 
 {
-    Window* window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(glfwWindow));
+    Window window = reinterpret_cast<Window>(glfwGetWindowUserPointer(glfwWindow));
     window->windowResized = true;
 }

@@ -10,8 +10,8 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& avai
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* window);
 bool hasStencilComponent(VkFormat format) { return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT; }
 
-SwapChain::SwapChain(Device* device) : device(device) {}
-SwapChain::~SwapChain()
+SwapChain_T::SwapChain_T(Device device) : device(device) {}
+SwapChain_T::~SwapChain_T()
 {
     vkDestroyImageView(device->getHandle(), depthImageView, nullptr);
 
@@ -26,7 +26,7 @@ SwapChain::~SwapChain()
     vkDestroySwapchainKHR(device->getHandle(), swapChain, nullptr);
 }
 
-void SwapChain::initSwapChain(VkSurfaceKHR surface, GLFWwindow*  window)
+void SwapChain_T::initSwapChain(VkSurfaceKHR surface, GLFWwindow*  window)
 {
     SwapChainSupportDetails swapChainSupport = device->querySwapChainSupport();
 
@@ -82,7 +82,7 @@ void SwapChain::initSwapChain(VkSurfaceKHR surface, GLFWwindow*  window)
     swapChainImageFormat = surfaceFormat.format;
     swapChainExtent = extent;
 }
-void SwapChain::initImageViews() {
+void SwapChain_T::initImageViews() {
     swapChainImageViews.resize(swapChainImages.size());
     for (size_t i = 0; i < swapChainImages.size(); i++) {
         VkImageViewCreateInfo createInfo{};
@@ -106,7 +106,7 @@ void SwapChain::initImageViews() {
     }
 }
 
-void SwapChain::initFramebuffers(VkRenderPass renderPass)
+void SwapChain_T::initFramebuffers(VkRenderPass renderPass)
 {
     Framebuffers.resize(imageCount);
 
@@ -130,7 +130,7 @@ void SwapChain::initFramebuffers(VkRenderPass renderPass)
     }
 }
 
-void SwapChain::initDepthStencil(ImageManager* imageManager)
+void SwapChain_T::initDepthStencil(ImageManager imageManager)
 {
     VkFormat depthFormat{ device->findDepthFormat() };
 

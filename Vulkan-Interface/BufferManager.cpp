@@ -2,8 +2,8 @@
 
 using namespace MYR;
 
-BufferManager::BufferManager(Device* device, Command* command) : device(device), command(command) {}
-BufferManager::~BufferManager()
+BufferManager_T::BufferManager_T(Device device, Command command) : device(device), command(command) {}
+BufferManager_T::~BufferManager_T()
 {
     for (auto& buffer : mappedBuffers)
         vmaUnmapMemory(device->getAllocator(), allocations[buffer]);
@@ -13,7 +13,7 @@ BufferManager::~BufferManager()
 }
 
 
-void BufferManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer* buffer) 
+void BufferManager_T::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VmaAllocationCreateFlags info, VkBuffer* buffer)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -32,13 +32,13 @@ void BufferManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, Vk
     allocations[*buffer] = *new_allocation;
 }
 
-void BufferManager::destroyBuffer(VkBuffer buffer)
+void BufferManager_T::destroyBuffer(VkBuffer buffer)
 {
     vmaDestroyBuffer(device->getAllocator(), buffer, allocations[buffer]);
     allocations.erase(buffer);
 }
 
-void BufferManager::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size) 
+void BufferManager_T::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t dst_offset, VkDeviceSize size)
 {
     VkCommandBuffer commandBuffer = command->beginSingleTimeCommands();
 
@@ -52,12 +52,12 @@ void BufferManager::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t 
 }
 
 
-void BufferManager::mapMemory(VkBuffer buffer, void** data)
+void BufferManager_T::mapMemory(VkBuffer buffer, void** data)
 {
     vmaMapMemory(device->getAllocator(), allocations[buffer], data);
     mappedBuffers.insert(buffer);
 }
-void BufferManager::unmapMemory(VkBuffer buffer)
+void BufferManager_T::unmapMemory(VkBuffer buffer)
 {
     vmaUnmapMemory(device->getAllocator(), allocations[buffer]);
     mappedBuffers.erase(buffer);

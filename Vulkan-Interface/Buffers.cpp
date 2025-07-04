@@ -2,13 +2,13 @@
 
 using namespace MYR;
 
-Buffers::Buffers(Device* device, Pipeline* pipeline,Command* command, const int MAX_FRAMES_IN_FLIGHT) : device(device), pipeline(pipeline), MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT), command(command){}
-Buffers::~Buffers()
+Buffers_T::Buffers_T(Device device, Pipeline pipeline,Command command, const int MAX_FRAMES_IN_FLIGHT) : device(device), pipeline(pipeline), MAX_FRAMES_IN_FLIGHT(MAX_FRAMES_IN_FLIGHT), command(command){}
+Buffers_T::~Buffers_T()
 {
     vkDestroyDescriptorPool(device->getHandle(), descriptorPool, nullptr);
 }
 
-void Buffers::initVIBuffer(BufferManager* bufferManager,const std::vector<Vertex> vertices, const std::vector<uint32_t> indices)
+void Buffers_T::initVIBuffer(BufferManager bufferManager,const std::vector<Vertex> vertices, const std::vector<uint32_t> indices)
 {
     vertex_count = static_cast<uint32_t>(vertices.size());
     index_count = static_cast<uint32_t>(indices.size());
@@ -39,7 +39,7 @@ void Buffers::initVIBuffer(BufferManager* bufferManager,const std::vector<Vertex
     bufferManager->destroyBuffer(stagingBuffer);
 }
 
-void Buffers::initUniformBuffers(BufferManager* bufferManager,size_t uboSize)
+void Buffers_T::initUniformBuffers(BufferManager bufferManager,size_t uboSize)
 {
     uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
@@ -50,7 +50,7 @@ void Buffers::initUniformBuffers(BufferManager* bufferManager,size_t uboSize)
     }
 }
 
-void Buffers::initDescriptorPool()
+void Buffers_T::initDescriptorPool()
 {
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -68,7 +68,7 @@ void Buffers::initDescriptorPool()
     
 }
 
-void Buffers::initDescriptorSets()
+void Buffers_T::initDescriptorSets()
 {
     std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, pipeline->getDescriptorLayout());
     VkDescriptorSetAllocateInfo allocInfo{};

@@ -4,14 +4,14 @@ using namespace MYR;
 
 uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice);
 
-ImageManager::ImageManager(Device* device, Command* command) : device(device), command(command) {}
-ImageManager::~ImageManager()
+ImageManager_T::ImageManager_T(Device device, Command command) : device(device), command(command) {}
+ImageManager_T::~ImageManager_T()
 {
     for (auto& kv : allocations)
         vmaDestroyImage(device->getAllocator(), kv.first, kv.second);
 }
 
-void ImageManager::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image)
+void ImageManager_T::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image)
 {
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -38,7 +38,7 @@ void ImageManager::createImage(uint32_t width, uint32_t height, VkFormat format,
     allocations[*image] = *new_allocation;
 }
 
-VkImageView ImageManager::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
+VkImageView ImageManager_T::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
 {
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -59,7 +59,7 @@ VkImageView ImageManager::createImageView(VkImage image, VkFormat format, VkImag
     return imageView;
 }
 
-void ImageManager::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, bool stencilComponent) {
+void ImageManager_T::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, bool stencilComponent) {
     VkCommandBuffer commandBuffer = command->beginSingleTimeCommands();
 
     VkImageMemoryBarrier barrier{};

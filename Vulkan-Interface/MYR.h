@@ -18,6 +18,15 @@
 
 namespace MYR
 {
+    typedef class ImageManager_T* ImageManager;
+    typedef class BufferManager_T* BufferManager;
+    typedef class Window_T* Window;
+    typedef class Core_T* Core;
+    typedef class Device_T* Device;
+    typedef class SwapChain_T* SwapChain;
+    typedef class Pipeline_T* Pipeline;
+    typedef class Command_T* Command;
+    typedef class Buffers_T* Buffers;
 
     const std::vector<const char*> validationLayers{ "VK_LAYER_KHRONOS_validation" };
 
@@ -58,15 +67,15 @@ namespace MYR
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    class ImageManager;
+    class ImageManager_T;
 
-    class Window
+    class Window_T
     {
     public:
         bool windowResized = false;
 
-        Window(uint32_t width, uint32_t height);
-        ~Window();
+        Window_T(uint32_t width, uint32_t height);
+        ~Window_T();
 
         void initWindow();
 
@@ -78,15 +87,15 @@ namespace MYR
         GLFWwindow* window;
     };
 
-    class Core
+    class Core_T
     {
     public:
-        Core(bool enableValidationLayers);
-        ~Core();
+        Core_T(bool enableValidationLayers);
+        ~Core_T();
 
         void initVulkanInstance();
         void initDebugMessenger();
-        void initSurface(Window* window);
+        void initSurface(Window window);
 
         VkInstance getInstance() const { return instance; }
         VkSurfaceKHR getSurface() const { return surface; }
@@ -98,11 +107,11 @@ namespace MYR
         bool enableValidationLayers;
     };
 
-    class Device
+    class Device_T
     {
     public:
-        Device();
-        ~Device();
+        Device_T();
+        ~Device_T();
 
         void setSurface(VkSurfaceKHR surface) { this->surface = surface; }
         void pickPhysicalDevice(VkInstance);
@@ -128,19 +137,19 @@ namespace MYR
         VkQueue graphicsQueue;
         VkQueue presentQueue;
 
-        VmaAllocator_T allocator;
+        VmaAllocator allocator;
     };
 
 
-    class SwapChain
+    class SwapChain_T
     {
     public:
-        SwapChain(Device*);
-        ~SwapChain();
+        SwapChain_T(Device);
+        ~SwapChain_T();
 
         void initSwapChain(VkSurfaceKHR, GLFWwindow*);
         void initImageViews();
-        void initDepthStencil(ImageManager*);
+        void initDepthStencil(ImageManager);
         void initFramebuffers(VkRenderPass);
 
 
@@ -152,7 +161,7 @@ namespace MYR
         VkFramebuffer getFramebuffer(uint32_t imageIndex) { return Framebuffers[imageIndex]; }
 
     private:
-        Device* device;
+        Device device;
 
         VkSwapchainKHR swapChain;
         uint32_t imageCount;
@@ -166,11 +175,11 @@ namespace MYR
         VkImageView depthImageView;
     };
 
-    class Pipeline
+    class Pipeline_T
     {
     public:
-        Pipeline(Device*);
-        ~Pipeline();
+        Pipeline_T(Device);
+        ~Pipeline_T();
 
         void initRenderPass(VkFormat);
         void initDescriptorSetLayout();
@@ -185,7 +194,7 @@ namespace MYR
         std::vector<PushConstant>& getPushConstants() { return pushConstants; }
 
     private:
-        Device* device;
+        Device device;
 
         VkRenderPass renderPass;
         VkPipelineLayout pipelineLayout;
@@ -199,11 +208,11 @@ namespace MYR
     };
 
 
-    class Command
+    class Command_T
     {
     public:
-        Command(Device*, Pipeline*, SwapChain*, const int);
-        ~Command();
+        Command_T(Device, Pipeline, SwapChain, const int);
+        ~Command_T();
 
         void initCommandPool();
         void initCommandBuffers();
@@ -216,9 +225,9 @@ namespace MYR
 
     private:
         const int MAX_FRAMES_IN_FLIGHT;
-        Device* device;
-        Pipeline* pipeline;
-        SwapChain* swapChain;
+        Device device;
+        Pipeline pipeline;
+        SwapChain swapChain;
 
         VkCommandPool commandPool;
         VkCommandPool transientCommandPool;
@@ -226,11 +235,11 @@ namespace MYR
     };
 
 
-    class ImageManager
+    class ImageManager_T
     {
     public:
-        ImageManager(Device*, Command*);
-        ~ImageManager();
+        ImageManager_T(Device, Command);
+        ~ImageManager_T();
 
 
         void createImage(uint32_t, uint32_t, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage*);
@@ -238,17 +247,17 @@ namespace MYR
         void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, bool stencilComponent = false);
 
     private:
-        Device* device;
-        Command* command;
+        Device device;
+        Command command;
 
         std::unordered_map<VkImage, VmaAllocation> allocations{};
     };
 
-    class BufferManager
+    class BufferManager_T
     {
     public:
-        BufferManager(Device*, Command*);
-        ~BufferManager();
+        BufferManager_T(Device, Command);
+        ~BufferManager_T();
 
         void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VmaAllocationCreateFlags, VkBuffer*);
         void destroyBuffer(VkBuffer);
@@ -257,21 +266,21 @@ namespace MYR
         void unmapMemory(VkBuffer);
 
     private:
-        Device* device;
-        Command* command;
+        Device device;
+        Command command;
 
         std::unordered_map<VkBuffer, VmaAllocation> allocations{};
         std::unordered_set<VkBuffer> mappedBuffers{};
 
     };
-    class Buffers
+    class Buffers_T
     {
     public:
-        Buffers(Device*, Pipeline*, Command*, const int);
-        ~Buffers();
+        Buffers_T(Device, Pipeline, Command, const int);
+        ~Buffers_T();
 
-        void initVIBuffer(BufferManager* bufferManager, const std::vector<Vertex>, const std::vector<uint32_t>);
-        void initUniformBuffers(BufferManager* bufferManager, size_t);
+        void initVIBuffer(BufferManager bufferManager, const std::vector<Vertex>, const std::vector<uint32_t>);
+        void initUniformBuffers(BufferManager bufferManager, size_t);
         void initDescriptorPool();
         void initDescriptorSets();
 
@@ -284,9 +293,9 @@ namespace MYR
 
     private:
         const int MAX_FRAMES_IN_FLIGHT;
-        Device* device;
-        Pipeline* pipeline;
-        Command* command;
+        Device device;
+        Pipeline pipeline;
+        Command command;
 
         VkDescriptorPool descriptorPool;
         std::vector<VkDescriptorSet> descriptorSets;
