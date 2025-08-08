@@ -283,9 +283,9 @@ private:
 
     void updateUniformBuffer(uint32_t currentImage) 
     {
-        static auto startTime = std::chrono::high_resolution_clock::now();
+        static std::chrono::steady_clock::time_point  startTime = std::chrono::high_resolution_clock::now();
 
-        auto currentTime = std::chrono::high_resolution_clock::now();
+        std::chrono::steady_clock::time_point  currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
         UniformBufferObject ubo{};

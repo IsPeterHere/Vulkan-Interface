@@ -16,11 +16,11 @@ public:
 	void position_update(glm::vec3 delta_position);
 
 private:
-	glm::vec3 position{ 2,2,2 };
+	glm::vec3 position{ 0,2,2 };
 	glm::vec3 true_up{ 0,0,1 };
 	glm::vec3 front;
 	glm::vec3 right;
-	double yaw = 0, pitch = 180;
+	double yaw = 60, pitch = 150;
 
 	glm::mat4x4 look_at{ glm::lookAt(position, {0,0,0}, true_up) };
 
