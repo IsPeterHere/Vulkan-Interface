@@ -19,6 +19,7 @@ private:
 	static Control* control;
 	GLFWwindow* window;
 
+
 	Control(GLFWwindow* window);
 
 	static void mouse_movement(GLFWwindow* window, double xpos, double ypos);
