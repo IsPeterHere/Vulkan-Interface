@@ -1,6 +1,7 @@
 #include"Control.h"
 #include <stdexcept>
 #include <glm/glm.hpp>
+#include<iostream>
 
 Control* Control::control;
 
@@ -23,15 +24,25 @@ Control* Control::makeControl(GLFWwindow* window)
 
 void Control::update_camera(Camera* camera, double mouse_sensitivity, float movement_velocity)
 {
-
 	static auto lastTime = std::chrono::high_resolution_clock::now();
+
+	float time_ellapsed1 = 0;
+	float time_ellapsed2 = 0;
+	float time_ellapsed3 = 0;
 
 	auto current_time = std::chrono::high_resolution_clock::now();
 	float time_ellapsed = std::chrono::duration<float, std::chrono::seconds::period>(current_time - lastTime).count();
+
+	time_ellapsed3 = time_ellapsed2;
+	time_ellapsed2 = time_ellapsed1;
+	time_ellapsed1 = time_ellapsed;
+
 	lastTime = current_time;
 
-	double dx = x_mouse_movement * mouse_sensitivity * time_ellapsed;
-	double dy = y_mouse_movement * mouse_sensitivity * time_ellapsed;
+	float avg_time_ellapsed = (time_ellapsed + time_ellapsed1 + time_ellapsed2 + time_ellapsed3) / (float) 4;
+
+	double dx = x_mouse_movement * mouse_sensitivity * avg_time_ellapsed;
+	double dy = y_mouse_movement * mouse_sensitivity * avg_time_ellapsed;
 
 	x_mouse_movement = 0;
 	y_mouse_movement = 0;
@@ -40,13 +51,13 @@ void Control::update_camera(Camera* camera, double mouse_sensitivity, float move
 
 	glm::vec3 delta_position{0,0,0};
 	if (w)
-		delta_position.x += movement_velocity * time_ellapsed;
+		delta_position.x += movement_velocity* avg_time_ellapsed;
 	if (s)
-		delta_position.x += -movement_velocity * time_ellapsed;
+		delta_position.x += -movement_velocity* avg_time_ellapsed;
 	if (a)
-		delta_position.y += -movement_velocity * time_ellapsed;
+		delta_position.y += -movement_velocity* avg_time_ellapsed;
 	if (d)
-		delta_position.y += movement_velocity * time_ellapsed;
+		delta_position.y += movement_velocity* avg_time_ellapsed;
 
 	camera->position_update(delta_position);
 }

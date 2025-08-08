@@ -159,6 +159,7 @@
     <None Include="shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BaseApp.h" />
     <ClInclude Include="MYR.h" />
     <ClInclude Include="vk_mem_alloc.h" />
   </ItemGroup>

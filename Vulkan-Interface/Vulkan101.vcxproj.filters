@@ -25,6 +25,9 @@
     <Filter Include="Header Files\Utils">
       <UniqueIdentifier>{5c5a2ec5-42d4-4f6c-b37a-3a38978b2458}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\MYR Interface">
+      <UniqueIdentifier>{342a2c67-f708-4e08-ad19-82112a509553}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Example.cpp">
@@ -85,10 +88,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MYR.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vk_mem_alloc.h">
+      <Filter>Header Files\MYR Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="MYR.h">
+      <Filter>Header Files\MYR Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
