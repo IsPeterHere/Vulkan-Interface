@@ -62,8 +62,8 @@ public:
     {
         while (!glfwWindowShouldClose(window->getHandle()))
         {
-            std::chrono::steady_clock::time_point  startTime = std::chrono::high_resolution_clock::now();
-            float f_call_time_ellapsed{ 0 };
+            static std::chrono::steady_clock::time_point  startTime = std::chrono::high_resolution_clock::now();
+            static float f_call_time_ellapsed{ 0 };
 
             std::chrono::steady_clock::time_point  currentTime = std::chrono::high_resolution_clock::now();
             f_call_time_ellapsed += std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
@@ -84,7 +84,13 @@ public:
         vkDeviceWaitIdle(device->getHandle());
     }
 
-    void flush_mesh_update(){buffers->initVIBuffer(bufferManager, vertices, indices);}
+    void flush_mesh_update()
+    {
+        vkWaitForFences(device->getHandle(), 1, &inFlightFences[(currentFrame + 1) % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
+        if (buffers->getVIBuffer() != NULL)
+            bufferManager->destroyBuffer(buffers->getVIBuffer());
+        buffers->initVIBuffer(bufferManager, vertices, indices);
+    }
     VkExtent2D getWindowExtent() { return swapChain->getExtent(); }
 private:
 
