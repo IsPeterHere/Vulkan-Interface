@@ -80,6 +80,7 @@ namespace MYR
         void initWindow();
 
         GLFWwindow* getHandle() const { return window; }
+        void close_window() { glfwSetWindowShouldClose(window, true); }
 
     private:
         const uint32_t WIDTH;

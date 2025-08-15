@@ -92,6 +92,7 @@ public:
         buffers->initVIBuffer(bufferManager, vertices, indices);
     }
     VkExtent2D getWindowExtent() { return swapChain->getExtent(); }
+    void close_window() { window->close_window(); }
 private:
 
     MYR::Window window;
