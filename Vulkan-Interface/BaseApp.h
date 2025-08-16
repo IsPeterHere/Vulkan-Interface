@@ -66,7 +66,7 @@ public:
             static float f_call_time_ellapsed{ 0 };
 
             std::chrono::steady_clock::time_point  currentTime = std::chrono::high_resolution_clock::now();
-            f_call_time_ellapsed += std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+            f_call_time_ellapsed = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
             if (f_call_time_ellapsed >= f_call_time)
             {
@@ -112,6 +112,7 @@ private:
     std::vector<VkFence> inFlightFences;
 
     uint32_t currentFrame = 0;
+    bool drawing{ true };
 
     MYR::PushConstant vary;
 
@@ -232,48 +233,50 @@ private:
 
         vkResetFences(device->getHandle(), 1, &inFlightFences[currentFrame]);
 
-        vkResetCommandBuffer(*(command->refCommandfBuffer(currentFrame)), 0);
-        command->recordCommandBuffer(currentFrame, imageIndex, buffers->getVIBuffer(), buffers->getIndexCount(), buffers->getDiscriptorSets());
-
-        updateUniformBuffer(currentFrame);
-
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = command->refCommandfBuffer(currentFrame);
-        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
-        if (vkQueueSubmit(device->getGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
-            throw std::runtime_error("failed to submit draw command buffer!");
-
-
-        VkPresentInfoKHR presentInfo{};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
-        VkSwapchainKHR swapChains[] = { swapChain->getHandle() };
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = swapChains;
-        presentInfo.pImageIndices = &imageIndex;
-        presentInfo.pResults = nullptr;
-
-        result = vkQueuePresentKHR(device->getGraphicsQueue(), &presentInfo);
-
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window->windowResized)
+        if (drawing)
         {
-            window->windowResized = false;
-            recreateSwapChain();
-        }
-        else if (result != VK_SUCCESS)
-            throw std::runtime_error("failed to present swap chain image!");
+            vkResetCommandBuffer(*(command->refCommandfBuffer(currentFrame)), 0);
+            command->recordCommandBuffer(currentFrame, imageIndex, buffers->getVIBuffer(), buffers->getIndexCount(), buffers->getDiscriptorSets());
 
+            updateUniformBuffer(currentFrame);
+
+            VkSubmitInfo submitInfo{};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
+            VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+            submitInfo.waitSemaphoreCount = 1;
+            submitInfo.pWaitSemaphores = waitSemaphores;
+            submitInfo.pWaitDstStageMask = waitStages;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = command->refCommandfBuffer(currentFrame);
+            VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
+            submitInfo.signalSemaphoreCount = 1;
+            submitInfo.pSignalSemaphores = signalSemaphores;
+            if (vkQueueSubmit(device->getGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
+                throw std::runtime_error("failed to submit draw command buffer!");
+
+
+            VkPresentInfoKHR presentInfo{};
+            presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+            presentInfo.waitSemaphoreCount = 1;
+            presentInfo.pWaitSemaphores = signalSemaphores;
+            VkSwapchainKHR swapChains[] = { swapChain->getHandle() };
+            presentInfo.swapchainCount = 1;
+            presentInfo.pSwapchains = swapChains;
+            presentInfo.pImageIndices = &imageIndex;
+            presentInfo.pResults = nullptr;
+
+            result = vkQueuePresentKHR(device->getGraphicsQueue(), &presentInfo);
+
+            if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window->windowResized)
+            {
+                window->windowResized = false;
+                recreateSwapChain();
+            }
+            else if (result != VK_SUCCESS)
+                throw std::runtime_error("failed to present swap chain image!");
+        }
 
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
@@ -293,20 +296,22 @@ private:
     {
         int width = 0, height = 0;
         glfwGetFramebufferSize(window->getHandle(), &width, &height);
-        while (width == 0 || height == 0) {
-            glfwGetFramebufferSize(window->getHandle(), &width, &height);
-            glfwWaitEvents();
+        if (width == 0 || height == 0) 
+            drawing = false;  
+        else
+        {
+            drawing = true;
+            vkDeviceWaitIdle(device->getHandle());
+
+            delete swapChain;
+            swapChain = new MYR::SwapChain_T(device);
+            command->set_swapChain(swapChain);
+
+            swapChain->initSwapChain(core->getSurface(), window->getHandle());
+            swapChain->initImageViews();
+            swapChain->initDepthStencil(imageManager);
+            swapChain->initFramebuffers(pipeline->getRenderPass());
         }
-
-        vkDeviceWaitIdle(device->getHandle());
-
-        delete swapChain;
-        swapChain = new MYR::SwapChain_T(device);
-
-        swapChain->initSwapChain(core->getSurface(), window->getHandle());
-        swapChain->initImageViews();
-        swapChain->initDepthStencil(imageManager);
-        swapChain->initFramebuffers(pipeline->getRenderPass());
 
     }
 };
