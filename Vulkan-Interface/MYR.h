@@ -223,6 +223,7 @@ namespace MYR
 
         VkCommandBuffer_T** refCommandfBuffer(uint32_t bufferIndex) { return &(commandBuffers[bufferIndex]); }
         VkCommandPool getTransientCommandPool() { return transientCommandPool; }
+        void set_swapChain(SwapChain swapChain) { this->swapChain = swapChain; }
 
     private:
         const int MAX_FRAMES_IN_FLIGHT;
