@@ -93,6 +93,10 @@ public:
     }
     VkExtent2D getWindowExtent() { return swapChain->getExtent(); }
     void close_window() { window->close_window(); }
+
+
+    Camera* camera;
+    Control* control;
 private:
 
     MYR::Window window;
@@ -104,8 +108,6 @@ private:
     MYR::ImageManager imageManager;
     MYR::BufferManager bufferManager;
     MYR::Buffers buffers;
-    Camera* camera;
-    Control* control;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
