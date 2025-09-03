@@ -38,7 +38,7 @@ public:
         app.run_with_update_function(&update, 1);
     }
 
-    static bool update()
+    static bool update(double delta_T)
     {
         instance->app.vertices[0].pos.z += 0.01f;
         return true;

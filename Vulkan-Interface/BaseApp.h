@@ -58,7 +58,7 @@ public:
         vkDeviceWaitIdle(device->getHandle());
     }
 
-    void run_with_update_function(bool (*f)(), float f_call_time)
+    void run_with_update_function(bool (*f)(double delta_T), float f_call_time)
     {
         while (!glfwWindowShouldClose(window->getHandle()))
         {
@@ -72,7 +72,7 @@ public:
             {
                 f_call_time_ellapsed = 0;
                 startTime = std::chrono::high_resolution_clock::now();
-                bool changes_made{ f() };
+                bool changes_made{ f(f_call_time) };
                 if (changes_made) flush_mesh_update();
             }
 
