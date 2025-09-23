@@ -34,7 +34,6 @@ public:
         };
 
         app.flush_mesh_update();
-        //app.run();
         app.run_with_update_function(&update, 1);
     }
 
