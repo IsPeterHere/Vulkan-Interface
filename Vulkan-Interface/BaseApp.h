@@ -118,17 +118,6 @@ private:
 
     MYR::PushConstant vary;
 
-    void mainLoop()
-    {
-        while (!glfwWindowShouldClose(window->getHandle()))
-        {
-            glfwPollEvents();
-            control->update_camera(camera, 20, 5);
-            doFrame();
-        }
-
-        vkDeviceWaitIdle(device->getHandle());
-    }
     void cleanup()
     {
         delete swapChain;
