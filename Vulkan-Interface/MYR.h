@@ -152,7 +152,7 @@ namespace MYR
         void initImageViews();
         void initDepthStencil(ImageManager);
         void initFramebuffers(VkRenderPass);
-
+        VkResult presentImage(uint32_t imageIndex, std::vector<VkSemaphore>& signalSemaphores);
 
         VkSwapchainKHR getHandle() { return swapChain; }
         VkFormat getImageFormat() { return swapChainImageFormat; };
@@ -218,6 +218,7 @@ namespace MYR
         void initCommandPool();
         void initCommandBuffers();
         void recordCommandBuffer(uint32_t, uint32_t, VkBuffer, uint32_t, std::vector<VkDescriptorSet>*);
+        void submitCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, VkSemaphore, std::vector<VkSemaphore>& signalSemaphores, VkFence);
         VkCommandBuffer beginSingleTimeCommands();
         void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 

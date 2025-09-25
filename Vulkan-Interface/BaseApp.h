@@ -224,6 +224,7 @@ private:
 
         vkResetFences(device->getHandle(), 1, &inFlightFences[currentFrame]);
 
+        updateUniformBuffer(currentFrame);
         if (drawing) drawFrame(imageIndex);
         
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -234,36 +235,11 @@ private:
         vkResetCommandBuffer(*(command->refCommandfBuffer(currentFrame)), 0);
         command->recordCommandBuffer(currentFrame, imageIndex, buffers->getVIBuffer(), buffers->getIndexCount(), buffers->getDiscriptorSets());
 
-        updateUniformBuffer(currentFrame);
 
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = command->refCommandfBuffer(currentFrame);
-        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
-        if (vkQueueSubmit(device->getGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
-            throw std::runtime_error("failed to submit draw command buffer!");
+        std::vector<VkSemaphore> signalSemaphores = { renderFinishedSemaphores[currentFrame] };
+        command->submitCommandBuffer(currentFrame,imageIndex, imageAvailableSemaphores[currentFrame], signalSemaphores, inFlightFences[currentFrame]);
 
-
-        VkPresentInfoKHR presentInfo{};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
-        VkSwapchainKHR swapChains[] = { swapChain->getHandle() };
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = swapChains;
-        presentInfo.pImageIndices = &imageIndex;
-        presentInfo.pResults = nullptr;
-
-        VkResult result = vkQueuePresentKHR(device->getGraphicsQueue(), &presentInfo);
+        VkResult result{ swapChain->presentImage(imageIndex, signalSemaphores) };
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {

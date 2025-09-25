@@ -142,7 +142,21 @@ void SwapChain_T::initDepthStencil(ImageManager imageManager)
 }
 
 
+VkResult SwapChain_T::presentImage(uint32_t imageIndex, std::vector<VkSemaphore>& signalSemaphores)
+{
+    VkPresentInfoKHR presentInfo{};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
+    presentInfo.waitSemaphoreCount = signalSemaphores.size();
+    presentInfo.pWaitSemaphores = signalSemaphores.data();
+    VkSwapchainKHR swapChains[] = { swapChain };
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains;
+    presentInfo.pImageIndices = &imageIndex;
+    presentInfo.pResults = nullptr;
+
+    return vkQueuePresentKHR(device->getGraphicsQueue(), &presentInfo);
+}
 
 
 

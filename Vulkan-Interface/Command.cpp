@@ -114,7 +114,22 @@ void Command_T::recordCommandBuffer(uint32_t currentFrameIndex, uint32_t imageIn
 
 }
 
-
+void Command_T::submitCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, VkSemaphore imageAvailableSemaphore, std::vector<VkSemaphore>& signalSemaphores, VkFence inFlightFence)
+{
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    VkSemaphore waitSemaphores[] = { imageAvailableSemaphore };
+    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = refCommandfBuffer(currentFrame);
+    submitInfo.signalSemaphoreCount = signalSemaphores.size();
+    submitInfo.pSignalSemaphores = signalSemaphores.data();
+    if (vkQueueSubmit(device->getGraphicsQueue(), 1, &submitInfo, inFlightFence) != VK_SUCCESS)
+        throw std::runtime_error("failed to submit draw command buffer!");
+}
 
 VkCommandBuffer Command_T::beginSingleTimeCommands() {
     VkCommandBufferAllocateInfo allocInfo{};
