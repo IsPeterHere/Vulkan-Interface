@@ -14,6 +14,11 @@ public:
 
     void main()
     {
+        vary = MYR::PushConstant{ 0,16,&pushConstantValues,VK_SHADER_STAGE_FRAGMENT_BIT };
+        app.createPushConstant(vary);
+
+        app.initComponents();
+
         app.vertices =
         {
         {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
@@ -39,12 +44,14 @@ public:
 
     static bool update(double delta_T)
     {
+        instance->pushConstantValues[0] = instance->pushConstantValues[0] + 0.01;
         instance->app.vertices[0].pos.z += 0.01f;
         return true;
     }
 
     BaseApp app{800,600};
-
+    MYR::PushConstant vary;
+    glm::vec4 pushConstantValues{ 0.10, 0.10, 0.9,1 };
 private:
     static INSTANCE* instance;
 
