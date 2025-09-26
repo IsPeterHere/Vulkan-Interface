@@ -75,6 +75,9 @@
     <ClCompile Include="Camera.h">
       <Filter>Header Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="SyncManager.cpp">
+      <Filter>Source Files\Managers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader.vert">

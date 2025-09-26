@@ -149,6 +149,7 @@
     <ClCompile Include="ImageManager.cpp" />
     <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="SwapChain.cpp" />
+    <ClCompile Include="SyncManager.cpp" />
     <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="VulkanInstance.cpp" />
     <ClCompile Include="Window.cpp" />
