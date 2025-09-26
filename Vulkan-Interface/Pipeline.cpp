@@ -93,17 +93,19 @@ void Pipeline_T::initRenderPass(VkFormat ImageFormat)
 
 void Pipeline_T::initDescriptorSetLayout()
 {
+    std::vector<VkDescriptorSetLayoutBinding> layoutBindings{ 1 };
+
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    uboLayoutBinding.pImmutableSamplers = nullptr;
+    layoutBindings[0].binding = 0;
+    layoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    layoutBindings[0].descriptorCount = 1;
+    layoutBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    layoutBindings[0].pImmutableSamplers = nullptr;
 
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &uboLayoutBinding;
+    layoutInfo.bindingCount = layoutBindings.size();
+    layoutInfo.pBindings = layoutBindings.data();
 
     if (vkCreateDescriptorSetLayout(device->getHandle(), &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
         throw std::runtime_error("failed to create descriptor set layout!");
