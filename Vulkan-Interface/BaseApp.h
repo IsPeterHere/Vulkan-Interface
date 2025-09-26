@@ -40,12 +40,15 @@ public:
         bufferManager(new MYR::BufferManager_T(device, command)),
         buffers(new MYR::Buffers_T(device, pipeline, command, MAX_FRAMES_IN_FLIGHT)),
         camera(new Camera())
+    {}
+    ~BaseApp() { cleanup(); }
+
+    void initComponents()
     {
         window->initWindow();
         initVulkan();
         control = Control::makeControl(window->getHandle());
     }
-    ~BaseApp() { cleanup(); }
 
     void run()
     {
@@ -95,6 +98,10 @@ public:
     VkExtent2D getWindowExtent() { return swapChain->getExtent(); }
     void close_window() { window->close_window(); }
 
+    void createPushConstant(MYR::PushConstant p)
+    {
+        pipeline->addPushConstant(p);
+    }
 
     Camera* camera;
     Control* control;
@@ -118,7 +125,6 @@ private:
     uint32_t currentFrame = 0;
     bool drawing{ true };
 
-    MYR::PushConstant vary;
 
     void cleanup()
     {
@@ -153,7 +159,6 @@ private:
 
         pipeline->initRenderPass(swapChain->getImageFormat());
         pipeline->initDescriptorSetLayout();
-        createPushConstants();
         pipeline->initGraphicsPipeline();
 
 
@@ -170,12 +175,6 @@ private:
         createSyncObjects();
     }
 
-    glm::vec4 values{ 0.10, 0.10, 0.9,1 };
-    void createPushConstants()
-    {
-        vary = MYR::PushConstant{ 0,16,&values,VK_SHADER_STAGE_FRAGMENT_BIT };
-        pipeline->addPushConstant(vary);
-    }
 
     void createSyncObjects()
     {
