@@ -8,7 +8,7 @@ Buffers_T::~Buffers_T()
     vkDestroyDescriptorPool(device->getHandle(), descriptorPool, nullptr);
 }
 
-void Buffers_T::initVIBuffer(BufferManager bufferManager,const std::vector<Vertex> vertices, const std::vector<uint32_t> indices)
+void Buffers_T::initVIBuffer(BufferManager bufferManager,const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 {
     vertex_count = static_cast<uint32_t>(vertices.size());
     index_count = static_cast<uint32_t>(indices.size());
@@ -82,23 +82,25 @@ void Buffers_T::initDescriptorSets()
         throw std::runtime_error("failed to allocate descriptor sets!");
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        std::vector<VkWriteDescriptorSet > descriptorWriters{ 1 };
+
         VkDescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = uniformBuffers[i];
         bufferInfo.offset = 0;
         bufferInfo.range = VK_WHOLE_SIZE;
 
         VkWriteDescriptorSet descriptorWrite{};
-        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrite.dstSet = descriptorSets[i];
-        descriptorWrite.dstBinding = 0;
-        descriptorWrite.dstArrayElement = 0;
-        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrite.descriptorCount = 1;
-        descriptorWrite.pBufferInfo = &bufferInfo;
-        descriptorWrite.pImageInfo = nullptr;
-        descriptorWrite.pTexelBufferView = nullptr; 
+        descriptorWriters[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWriters[0].dstSet = descriptorSets[i];
+        descriptorWriters[0].dstBinding = 0;
+        descriptorWriters[0].dstArrayElement = 0;
+        descriptorWriters[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWriters[0].descriptorCount = 1;
+        descriptorWriters[0].pBufferInfo = &bufferInfo;
+        descriptorWriters[0].pImageInfo = nullptr;
+        descriptorWriters[0].pTexelBufferView = nullptr;
 
-        vkUpdateDescriptorSets(device->getHandle(), 1, &descriptorWrite, 0, nullptr);
+        vkUpdateDescriptorSets(device->getHandle(), (uint32_t) descriptorWriters.size(), descriptorWriters.data(), 0, nullptr);
     }
     
 }

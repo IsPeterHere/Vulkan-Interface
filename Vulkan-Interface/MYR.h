@@ -18,6 +18,7 @@
 
 namespace MYR
 {
+    typedef class SyncManager_T* SyncManager;
     typedef class ImageManager_T* ImageManager;
     typedef class BufferManager_T* BufferManager;
     typedef class Window_T* Window;
@@ -141,6 +142,21 @@ namespace MYR
         VmaAllocator allocator;
     };
 
+    class SyncManager_T
+    {
+    public:
+        SyncManager_T(Device);
+        ~SyncManager_T();
+
+        VkSemaphore createSemaphore();
+        VkFence createFence();
+
+    private:
+        Device device;
+
+        std::vector<VkSemaphore> semaphores;
+        std::vector<VkFence> fences;
+    };
 
     class SwapChain_T
     {
@@ -282,7 +298,7 @@ namespace MYR
         Buffers_T(Device, Pipeline, Command, const int);
         ~Buffers_T();
 
-        void initVIBuffer(BufferManager bufferManager, const std::vector<Vertex>, const std::vector<uint32_t>);
+        void initVIBuffer(BufferManager bufferManager, const std::vector<Vertex>&, const std::vector<uint32_t>&);
         void initUniformBuffers(BufferManager bufferManager, size_t);
         void initDescriptorPool();
         void initDescriptorSets();

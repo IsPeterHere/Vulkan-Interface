@@ -35,6 +35,7 @@ public:
         swapChain(new MYR::SwapChain_T(device)),
         pipeline(new MYR::Pipeline_T(device)),
         command(new MYR::Command_T(device, pipeline, swapChain, MAX_FRAMES_IN_FLIGHT)),
+        syncManager(new MYR::SyncManager_T(device)),
         imageManager(new MYR::ImageManager_T(device, command)),
         bufferManager(new MYR::BufferManager_T(device, command)),
         buffers(new MYR::Buffers_T(device, pipeline, command, MAX_FRAMES_IN_FLIGHT)),
@@ -105,6 +106,7 @@ private:
     MYR::SwapChain swapChain;
     MYR::Pipeline pipeline;
     MYR::Command command;
+    MYR::SyncManager syncManager;
     MYR::ImageManager imageManager;
     MYR::BufferManager bufferManager;
     MYR::Buffers buffers;
@@ -125,14 +127,7 @@ private:
         delete camera;
         delete imageManager;
         delete bufferManager;
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-        {
-            vkDestroySemaphore(device->getHandle(), renderFinishedSemaphores[i], nullptr);
-            vkDestroySemaphore(device->getHandle(), imageAvailableSemaphores[i], nullptr);
-            vkDestroyFence(device->getHandle(), inFlightFences[i], nullptr);
-        }
-
+        delete syncManager;
         delete buffers;
         delete command;
         delete pipeline;
@@ -188,21 +183,11 @@ private:
         renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
 
-        VkSemaphoreCreateInfo semaphoreInfo{};
-        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-        VkFenceCreateInfo fenceInfo{};
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
-            if (vkCreateSemaphore(device->getHandle(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-                vkCreateSemaphore(device->getHandle(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-                vkCreateFence(device->getHandle(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
-            {
-                throw std::runtime_error("failed to create synchronization objects for a frame!");
-            }
+            imageAvailableSemaphores[i] = syncManager->createSemaphore();
+            renderFinishedSemaphores[i] = syncManager->createSemaphore();
+            inFlightFences[i] = syncManager->createFence();
         }
     }
 
