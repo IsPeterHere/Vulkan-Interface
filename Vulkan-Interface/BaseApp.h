@@ -58,8 +58,6 @@ public:
             control->update_camera(camera, 20, 5);
             doFrame();
         }
-
-        vkDeviceWaitIdle(device->getHandle());
     }
 
     void run_with_update_function(bool (*f)(double delta_T), float f_call_time)
@@ -84,8 +82,6 @@ public:
             control->update_camera(camera, 20, 5);
             doFrame();
         }
-
-        vkDeviceWaitIdle(device->getHandle());
     }
 
     void flush_mesh_update()
@@ -128,6 +124,8 @@ private:
 
     void cleanup()
     {
+        vkDeviceWaitIdle(device->getHandle());
+
         delete swapChain;
         delete control;
         delete camera;
