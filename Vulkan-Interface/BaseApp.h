@@ -127,7 +127,7 @@ private:
         vkDeviceWaitIdle(device->getHandle());
 
         delete swapChain;
-        delete control;
+        Control::destroyControl();
         delete camera;
         delete imageManager;
         delete bufferManager;

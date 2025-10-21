@@ -7,6 +7,7 @@ class Control
 {
 public:
 	static Control* makeControl(GLFWwindow* window);
+	static void destroyControl();
 	void update_camera(Camera* camera, double mouse_sensitivity, float movement_velocity);
 
 	int width, height;
