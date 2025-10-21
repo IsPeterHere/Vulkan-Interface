@@ -5,11 +5,15 @@ class INSTANCE
 public:
     static INSTANCE* get_INSTANCE()
     {
-        static bool first_call{ true };
-        if (first_call)
+        if (instance == NULL)
             instance = new INSTANCE();
-        first_call = false;
         return instance;
+    }
+
+    static void destroy_INSTANCE()
+    {
+        delete instance;
+        instance = NULL;
     }
 
     void main()

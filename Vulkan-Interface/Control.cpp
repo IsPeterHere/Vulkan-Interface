@@ -12,14 +12,19 @@ Control::Control(GLFWwindow* window) : window(window)
 	bind();
 }
 
+
 Control* Control::makeControl(GLFWwindow* window)
 {
-	static bool first_call{ true };
-	if (first_call)
+	if (control == NULL)
 		control = new Control(window);
-	first_call = false;
 	return control;
 }
+void Control::destroyControl()
+{
+	delete control;
+	control = NULL;
+}
+
 
 
 void Control::update_camera(Camera* camera, double mouse_sensitivity, float movement_velocity)
