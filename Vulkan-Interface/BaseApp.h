@@ -32,13 +32,13 @@ public:
         window(new MYR::Window_T(width, height)),
         core(new MYR::Core_T(enableValidationLayers)),
         device(new MYR::Device_T()),
-        swapChain(new MYR::SwapChain_T(device)),
-        pipeline(new MYR::Pipeline_T(device)),
-        command(new MYR::Command_T(device, pipeline, swapChain, MAX_FRAMES_IN_FLIGHT)),
-        syncManager(new MYR::SyncManager_T(device)),
-        imageManager(new MYR::ImageManager_T(device, command)),
-        bufferManager(new MYR::BufferManager_T(device, command)),
-        buffers(new MYR::Buffers_T(device, pipeline, command, MAX_FRAMES_IN_FLIGHT)),
+        swapChain(new MYR::SwapChain_T(device.get())),
+        pipeline(new MYR::Pipeline_T(device.get())),
+        command(new MYR::Command_T(device.get(), pipeline.get(), swapChain.get(), MAX_FRAMES_IN_FLIGHT)),
+        syncManager(new MYR::SyncManager_T(device.get())),
+        imageManager(new MYR::ImageManager_T(device.get(), command.get())),
+        bufferManager(new MYR::BufferManager_T(device.get(), command.get())),
+        buffers(new MYR::Buffers_T(device.get(), pipeline.get(), command.get(), MAX_FRAMES_IN_FLIGHT)),
         camera(new Camera())
     {}
     ~BaseApp() { cleanup(); }
@@ -55,7 +55,7 @@ public:
         while (!glfwWindowShouldClose(window->getHandle()))
         {
             glfwPollEvents();
-            control->update_camera(camera, 20, 5);
+            control->update_camera(camera.get(), 20, 5);
             doFrame();
         }
     }
@@ -79,7 +79,7 @@ public:
             }
 
             glfwPollEvents();
-            control->update_camera(camera, 20, 5);
+            control->update_camera(camera.get(), 20, 5);
             doFrame();
         }
     }
@@ -89,7 +89,7 @@ public:
         vkWaitForFences(device->getHandle(), 1, &inFlightFences[(currentFrame + 1) % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
         if (buffers->getVIBuffer() != NULL)
             bufferManager->destroyBuffer(buffers->getVIBuffer());
-        buffers->initVIBuffer(bufferManager, vertices, indices);
+        buffers->initVIBuffer(bufferManager.get(), vertices, indices);
     }
     VkExtent2D getWindowExtent() { return swapChain->getExtent(); }
     void close_window() { window->close_window(); }
@@ -99,20 +99,21 @@ public:
         pipeline->addPushConstant(p);
     }
 
-    Camera* camera;
+    std::unique_ptr<Camera> camera;
     Control* control;
 private:
 
-    MYR::Window window;
-    MYR::Core core;
-    MYR::Device device;
-    MYR::SwapChain swapChain;
-    MYR::Pipeline pipeline;
-    MYR::Command command;
-    MYR::SyncManager syncManager;
-    MYR::ImageManager imageManager;
-    MYR::BufferManager bufferManager;
-    MYR::Buffers buffers;
+    std::unique_ptr<MYR::Window_T> window;
+    std::unique_ptr<MYR::Core_T> core;
+    std::unique_ptr<MYR::Device_T> device;
+    std::unique_ptr<MYR::SwapChain_T> swapChain;
+    std::unique_ptr<MYR::Pipeline_T> pipeline;
+    std::unique_ptr<MYR::Command_T> command;
+    std::unique_ptr<MYR::SyncManager_T> syncManager;
+    std::unique_ptr<MYR::ImageManager_T> imageManager;
+    std::unique_ptr<MYR::BufferManager_T> bufferManager;
+    std::unique_ptr<MYR::Buffers_T> buffers;
+
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -126,25 +127,25 @@ private:
     {
         vkDeviceWaitIdle(device->getHandle());
 
-        delete swapChain;
+        swapChain.reset();
         Control::destroyControl();
-        delete camera;
-        delete imageManager;
-        delete bufferManager;
-        delete syncManager;
-        delete buffers;
-        delete command;
-        delete pipeline;
-        delete device;
-        delete core;
-        delete window;
+        camera.reset();
+        imageManager.reset();
+        bufferManager.reset();
+        syncManager.reset();
+        buffers.reset();
+        command.reset();
+        pipeline.reset();
+        device.reset();
+        core.reset();
+        window.reset();
     }
 
     void initVulkan()
     {
         core->initVulkanInstance();
         core->initDebugMessenger();
-        core->initSurface(window);
+        core->initSurface(window.get());
 
         device->setSurface(core->getSurface());
 
@@ -163,11 +164,11 @@ private:
         command->initCommandPool();
         command->initCommandBuffers();
 
-        swapChain->initDepthStencil(imageManager);
+        swapChain->initDepthStencil(imageManager.get());
         swapChain->initFramebuffers(pipeline->getRenderPass());
 
         buffers->initDescriptorPool();
-        buffers->initUniformBuffers(bufferManager, sizeof(UniformBufferObject));
+        buffers->initUniformBuffers(bufferManager.get(), sizeof(UniformBufferObject));
         buffers->initDescriptorSets();
 
         createSyncObjects();
@@ -254,13 +255,12 @@ private:
             drawing = true;
             vkDeviceWaitIdle(device->getHandle());
 
-            delete swapChain;
-            swapChain = new MYR::SwapChain_T(device);
-            command->set_swapChain(swapChain);
+            swapChain = std::make_unique<MYR::SwapChain_T>(MYR::SwapChain_T(device.get()));
+            command->set_swapChain(swapChain.get());
 
             swapChain->initSwapChain(core->getSurface(), window->getHandle());
             swapChain->initImageViews();
-            swapChain->initDepthStencil(imageManager);
+            swapChain->initDepthStencil(imageManager.get());
             swapChain->initFramebuffers(pipeline->getRenderPass());
         }
 
