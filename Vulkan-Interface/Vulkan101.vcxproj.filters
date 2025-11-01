@@ -91,9 +91,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="vk_mem_alloc.h">
-      <Filter>Header Files\MYR Interface</Filter>
-    </ClInclude>
     <ClInclude Include="MYR.h">
       <Filter>Header Files\MYR Interface</Filter>
     </ClInclude>

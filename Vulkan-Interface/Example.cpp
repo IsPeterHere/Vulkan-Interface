@@ -5,15 +5,14 @@ class INSTANCE
 public:
     static INSTANCE* get_INSTANCE()
     {
-        if (instance == NULL)
-            instance = new INSTANCE();
-        return instance;
+        if (instance == nullptr)
+            instance =  std::unique_ptr<INSTANCE>(new INSTANCE()) ;
+        return instance.get();
     }
 
     static void destroy_INSTANCE()
     {
-        delete instance;
-        instance = NULL;
+        instance = nullptr;
     }
 
     void main()
@@ -57,12 +56,12 @@ public:
     MYR::PushConstant vary;
     glm::vec4 pushConstantValues{ 0.10, 0.10, 0.9,1 };
 private:
-    static INSTANCE* instance;
+    static std::unique_ptr<INSTANCE> instance;
 
     INSTANCE() {}
 };
 
-INSTANCE* INSTANCE::instance;
+std::unique_ptr<INSTANCE> INSTANCE::instance;
 
 int main() 
 {
@@ -70,7 +69,7 @@ int main()
     {
         INSTANCE* inst = INSTANCE::get_INSTANCE();
         inst->main();
-        delete inst;
+        INSTANCE::destroy_INSTANCE();
     }
     catch (const std::exception& e) 
     {

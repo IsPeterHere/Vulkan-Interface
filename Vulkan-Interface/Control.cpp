@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include<iostream>
 
-Control* Control::control;
+std::unique_ptr<Control> Control::control;
 
 Control::Control(GLFWwindow* window) : window(window) 
 {
@@ -15,14 +15,13 @@ Control::Control(GLFWwindow* window) : window(window)
 
 Control* Control::makeControl(GLFWwindow* window)
 {
-	if (control == NULL)
-		control = new Control(window);
-	return control;
+	if (Control::control == nullptr)
+		Control::control = std::unique_ptr<Control>(new Control(window));
+	return Control::control.get();
 }
 void Control::destroyControl()
 {
-	delete control;
-	control = NULL;
+	Control::control = nullptr;
 }
 
 

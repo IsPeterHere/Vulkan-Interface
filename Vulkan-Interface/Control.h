@@ -17,7 +17,7 @@ public:
 	bool w, a, s, d;
 
 private:
-	static Control* control;
+	static std::unique_ptr<Control> control;
 	GLFWwindow* window;
 
 
