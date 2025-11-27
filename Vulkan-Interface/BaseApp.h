@@ -89,7 +89,7 @@ public:
         vkWaitForFences(device->getHandle(), 1, &inFlightFences[(currentFrame + 1) % MAX_FRAMES_IN_FLIGHT], VK_TRUE, UINT64_MAX);
         if (buffers->getVIBuffer() != NULL)
             bufferManager->destroyBuffer(buffers->getVIBuffer());
-        buffers->initVIBuffer(bufferManager.get(), vertices, indices);
+        buffers->createVIBuffer(bufferManager.get(), vertices, indices);
     }
     VkExtent2D getWindowExtent() { return swapChain->getExtent(); }
     void close_window() { window->close_window(); }

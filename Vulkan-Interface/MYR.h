@@ -13,8 +13,7 @@
 #include <stdexcept>
 #include<unordered_map>
 #include<unordered_set>
-
-
+#include<utility>
 
 namespace MYR
 {
@@ -298,7 +297,7 @@ namespace MYR
         Buffers_T(Device, Pipeline, Command, const int);
         ~Buffers_T();
 
-        void initVIBuffer(BufferManager bufferManager, const std::vector<Vertex>&, const std::vector<uint32_t>&);
+        void createVIBuffer(BufferManager bufferManager, const std::vector<Vertex>&, const std::vector<uint32_t>&);
         void initUniformBuffers(BufferManager bufferManager, size_t);
         void initDescriptorPool();
         void initDescriptorSets();
@@ -320,13 +319,12 @@ namespace MYR
         std::vector<VkDescriptorSet> descriptorSets;
 
         VmaAllocation viBufferAllocation;
-        VkBuffer viBuffer;
+        VkBuffer viBuffer{NULL};
         uint32_t index_count;
         uint32_t vertex_count;
 
         std::vector<VkBuffer> uniformBuffers;
         std::vector<void*> uniformBuffersMapped;
-
     };
 
 }

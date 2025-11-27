@@ -31,11 +31,11 @@ void ImageManager_T::createImage(uint32_t width, uint32_t height, VkFormat forma
     VmaAllocationCreateInfo allocInfo = {};
     allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
 
-    VmaAllocation* new_allocation{ new VmaAllocation };
-    if (vmaCreateImage(device->getAllocator(), &imageInfo, &allocInfo, image, new_allocation, nullptr) != VK_SUCCESS)
+    VmaAllocation new_allocation{ };
+    if (vmaCreateImage(device->getAllocator(), &imageInfo, &allocInfo, image, &new_allocation, nullptr) != VK_SUCCESS)
         throw std::runtime_error("failed to allocate image memory!");
 
-    allocations[*image] = *new_allocation;
+    allocations[*image] = std::move(new_allocation);
 }
 
 VkImageView ImageManager_T::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
