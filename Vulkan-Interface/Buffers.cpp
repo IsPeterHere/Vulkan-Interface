@@ -8,7 +8,7 @@ Buffers_T::~Buffers_T()
     vkDestroyDescriptorPool(device->getHandle(), descriptorPool, nullptr);
 }
 
-void Buffers_T::initVIBuffer(BufferManager bufferManager,const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+void Buffers_T::createVIBuffer(BufferManager bufferManager,const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 {
     vertex_count = static_cast<uint32_t>(vertices.size());
     index_count = static_cast<uint32_t>(indices.size());

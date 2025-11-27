@@ -25,11 +25,11 @@ void BufferManager_T::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, 
     allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
     allocInfo.flags = info;
 
-    VmaAllocation* new_allocation { new VmaAllocation };
-    if (vmaCreateBuffer(device->getAllocator(), &bufferInfo, &allocInfo, buffer, new_allocation, nullptr) != VK_SUCCESS)
+    VmaAllocation new_allocation {};
+    if (vmaCreateBuffer(device->getAllocator(), &bufferInfo, &allocInfo, buffer, &new_allocation, nullptr) != VK_SUCCESS)
         throw std::runtime_error("failed to create buffer!");
 
-    allocations[*buffer] = *new_allocation;
+    allocations[*buffer] = std::move(new_allocation);
 }
 
 void BufferManager_T::destroyBuffer(VkBuffer buffer)
